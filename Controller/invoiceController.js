@@ -19,92 +19,47 @@ export const createInvoice = async (bookingDetails) => {
   }
 
   const doc = new PDFDocument({ size: "A4", margin: 50 });
-  const invoicePath = path.join(
-    invoicesDir,
-    `invoice_${bookingDetails._id}.pdf`
-  );
+  const invoicePath = path.join(invoicesDir, `invoice_${bookingDetails._id}.pdf`);
   doc.pipe(fs.createWriteStream(invoicePath));
 
-  doc.fontSize(40).fillColor("black").text("RentRush Invoice", 50, 80);
+  // Header Section
+  doc.rect(0, 0, 612, 100).fill("#4A90E2");
+  doc.fillColor("white").fontSize(30).text("RentRush Invoice", 50, 40);
 
-  doc.circle(60, 140, 12).fillColor("green").fill();
-  doc
-    .fontSize(14)
-    .fillColor("white")
-    .text("Live", 50, 135, { align: "center", width: 20 });
+  // Invoice Details
+  doc.fillColor("black").fontSize(18).text("Invoice", 380, 40);
+  doc.fontSize(12).text(`#${bookingDetails._id}`, 380, 55);
+  doc.text(`Invoice Date: ${moment().format("MMMM Do YYYY")}`, 380, 70);
+  doc.text(`Due Date: ${moment().add(1, "day").format("MMMM Do YYYY")}`, 380, 85);
 
-  doc.fontSize(18).fillColor("black").text("Invoice", 350, 80);
-  doc.fontSize(12).text(`#${bookingDetails._id}`, 350, 100);
-   doc.text(`Invoice Date: ${moment().format('MMMM Do YYYY')}`, 350, 120);
-   doc.text(`Due Date: ${moment().add(1, 'day').format('MMMM Do YYYY')}`, 350, 135);
+  // Billing Information
+  doc.fillColor("black").fontSize(14).text("Billed To:", 50, 150);
+  doc.fontSize(12).text(`${user.ownerName}\n${user.email}\n${user.address}\n${user.contactNumber}`, 50, 170);
+  
+  doc.fontSize(14).text("From:", 350, 150);
+  doc.fontSize(12).text("RentRush Inc.\nrentrush.com\n1234 Car Rental Avenue\n(+254) 123-456-789", 350, 170);
 
-  // Billed To and From Details
-  doc
-    .moveDown()
-    .text("Billed To", 50, 220)
-    .text(
-      `${user.ownerName}\n${user.email}\n${user.address}\n${user.contactNumber}`,
-      50,
-      240
-    );
+  // Table Headers
+  doc.moveTo(50, 250).lineTo(550, 250).stroke();
+  doc.fontSize(12).text("Description", 50, 260).text("Date", 200, 260).text("Daily Rent", 350, 260).text("Amount", 450, 260);
+  doc.moveTo(50, 280).lineTo(550, 280).stroke();
 
-  doc
-    .text("From", 350, 220)
-    .text(
-      "RentRush Inc.\n rentrush.com\n 1234 Car Rental Avenue\n (+254) 123-456-789",
-      350,
-      240
-    );
-
-  // Invoice Description Table Header
-  doc.moveTo(50, 320).lineTo(550, 320).stroke();
-  doc
-    .fontSize(12)
-    .fillColor("black")
-    .text("Description", 50, 330)
-    .text("Date", 200, 330)
-    .text("Daily Rent", 350, 330)
-    .text("Amount", 450, 330);
-  doc.moveTo(50, 350).lineTo(550, 350).stroke();
-
-  // Invoice Items - Car Details
-  doc
-    .text(`Car Detail: ${car.carBrand} ${car.carModel} (${car.color})`, 50, 360)
-    .text(
-      `${moment(bookingDetails.rentalStartDate).format("YYYY-MM-DD")} ${
-        bookingDetails.rentalStartTime
-      }`,
-      200,
-      360
-    )
-    .text(`${car.rentRate.toFixed(2)} Rs`, 350, 360)
-    .text(`${bookingDetails.totalPrice.toFixed(2)} Rs`, 450, 360);
-
-  // // Additional Invoice Items (can add more if needed)
-  // doc.text('Additional Services', 50, 380).text('None', 200, 380).text('N/A', 350, 380).text('N/A', 450, 380);
-
-  // Subtotal, Tax, and Total
+  // Table Data
+  doc.fontSize(12)
+    .text(`${car.carBrand} ${car.carModel} (${car.color})`, 50, 290)
+    .text(`${moment(bookingDetails.rentalStartDate).format("YYYY-MM-DD")} ${bookingDetails.rentalStartTime}`, 200, 290)
+    .text(`${car.rentRate.toFixed(2)} Rs`, 350, 290)
+    .text(`${bookingDetails.totalPrice.toFixed(2)} Rs`, 450, 290);
+  
+  // Subtotal & Total
   const subtotal = bookingDetails.totalPrice;
-  // const discount = subtotal * 0.02; // Example: 2% discount
-  // const totalDue = subtotal - discount;
-
-  doc
-    .moveDown()
-    .text("Subtotal", 350, 450)
-    .text(`${subtotal.toFixed(2)} Rs`, 450, 450);
-  //  doc.text('Discount (2%)', 350, 470).text(`${discount.toFixed(2)} Rs`, 450, 470);
-  //  doc.text('Total', 350, 490).text(`${totalDue.toFixed(2)} Rs`, 450, 490);
-  //  doc.text('Amount Due', 350, 510).text(`${totalDue.toFixed(2)} Rs`, 450, 510);
+  doc.moveTo(50, 320).lineTo(550, 320).stroke();
+  doc.fontSize(12).text("Subtotal", 350, 330).text(`${subtotal.toFixed(2)} Rs`, 450, 330);
 
   // Footer
-  doc
-    .fontSize(10)
-    .fillColor("gray")
-    .text("Thank you for choosing RentRush!", 50, 650, { align: "center" });
-
-  // Finish the document
+  doc.moveTo(50, 500).lineTo(550, 500).stroke();
+  doc.fontSize(10).fillColor("gray").text("Thank you for choosing RentRush!", 50, 520, { align: "center" });
   doc.end();
-
   console.log(`Invoice saved at: ${invoicePath}`);
   return invoicePath;
 };
