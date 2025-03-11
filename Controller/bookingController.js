@@ -295,62 +295,96 @@ export const updateBooking = async (req, res) => {
   }
 };
 
+// Date format fix (YYYY-MM-DD)
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return null;
+  return date.toISOString().split('T')[0];
+};
+
+// Time format  fix  (24-hour format)
+const formatTime = (timeString) => {
+  if (!timeString) return null;
+  const [time, modifier] = timeString.split(' ');
+  let [hours, minutes] = time.split(':');
+
+  if (modifier === 'PM' && hours !== '12') {
+    hours = parseInt(hours, 10) + 12;
+  }
+  if (modifier === 'AM' && hours === '12') {
+    hours = '00';
+  }
+  return `${hours}:${minutes}`;
+};
+
 // EXTEND BOOKING
 export const extendBooking = async (req, res) => {
   const { bookingId } = req.params;
   const { rentalEndDate, rentalEndTime } = req.body;
 
+  console.log("Booking ID:", bookingId);
+  console.log("Rental End Date:", rentalEndDate);
+  console.log("Rental End Time:", rentalEndTime);
+
   try {
-    // Find the booking by ID
     const booking = await Booking.findById(bookingId).populate("carId");
     if (!booking) {
       return res.status(404).json({ message: "Booking not found" });
     }
 
-    // Calculate the current time and the rental start time
-    const currentTime = new Date();
-    const rentalStartDateTime = new Date(
-      `${booking.rentalStartDate}T${booking.rentalStartTime}`
-    );
-
-    // Restrict extensions if the rental start time has already passed
-    if (rentalStartDateTime <= currentTime) {
-      return res.status(400).json({
-        message: "You can only extend the booking before the rental start time.",
-      });
+    if (!booking.carId) {
+      return res.status(400).json({ message: "Car details not found." });
     }
 
-    // Update rental end date and time if provided
+    console.log("Car Rent Rate:", booking.carId.rentRate);
+
+    const rentalStartDate = formatDate(booking.rentalStartDate);
+    const rentalStartTime = formatTime(booking.rentalStartTime);
+
+    if (!rentalStartDate || !rentalStartTime) {
+      return res.status(400).json({ message: "Invalid rental start date or time." });
+    }
+
+    const rentalStartDateTime = new Date(`${rentalStartDate}T${rentalStartTime}`);
+    console.log("Rental Start DateTime:", rentalStartDateTime);
+
     if (rentalEndDate) {
-      if (isNaN(new Date(rentalEndDate))) {
+      const formattedEndDate = formatDate(rentalEndDate);
+      if (!formattedEndDate) {
         return res.status(400).json({ message: "Invalid rental end date format." });
       }
-      booking.rentalEndDate = rentalEndDate; // Keep as string
+      const updatedRentalEndDateTime = new Date(`${formattedEndDate}T${booking.rentalEndTime}`);
+      if (updatedRentalEndDateTime <= rentalStartDateTime) {
+        return res.status(400).json({
+          message: "Rental end date cannot be before or same as the start date.",
+        });
+      }
+      booking.rentalEndDate = formattedEndDate;
     }
 
     if (rentalEndTime) {
-      if (!/^\d{2}:\d{2}$/.test(rentalEndTime)) {
+      const formattedEndTime = formatTime(rentalEndTime);
+      if (!formattedEndTime) {
         return res.status(400).json({ message: "Invalid rental end time format." });
       }
-      booking.rentalEndTime = rentalEndTime; // Keep as string
+      booking.rentalEndTime = formattedEndTime;
     }
 
-    // Recalculate the rental start and end times
+    // Ensure end date/time after start date/time
     const updatedRentalEndDateTime = new Date(
       `${booking.rentalEndDate}T${booking.rentalEndTime}`
     );
+    console.log("Updated Rental End DateTime:", updatedRentalEndDateTime);
 
-    // Validate the updated rental times
     if (updatedRentalEndDateTime <= rentalStartDateTime) {
       return res.status(400).json({
         message: "Rental end time must be after the rental start time.",
       });
     }
 
-    // Check for overlapping bookings
     const overlappingBooking = await Booking.findOne({
       carId: booking.carId,
-      _id: { $ne: bookingId }, // Exclude the current booking
+      _id: { $ne: bookingId },
       $or: [
         {
           rentalStartDate: { $lte: booking.rentalEndDate },
@@ -358,28 +392,34 @@ export const extendBooking = async (req, res) => {
         },
       ],
     });
+
     if (overlappingBooking) {
-      return res
-        .status(400)
-        .json({ message: "The car is already booked for the selected dates." });
+      return res.status(400).json({
+        message: "The car is already booked for the selected dates.",
+      });
     }
 
-    // Recalculate the total price based on the updated dates and times
+    if (!booking.carId.rentRate) {
+      return res.status(400).json({ message: "Car rent rate not available." });
+    }
+
     const rentalDuration =
-      (updatedRentalEndDateTime - rentalStartDateTime) / (1000 * 60 * 60 * 24) + 1; // Add 1 to include the last day
+      (updatedRentalEndDateTime - rentalStartDateTime) / (1000 * 60 * 60 * 24) + 1;
     const daysRented = Math.max(0, Math.ceil(rentalDuration));
-    const totalPrice = daysRented * booking.carId.rentRate; // Assuming rentRate is available in carId
+    const totalPrice = daysRented * booking.carId.rentRate;
+
+    console.log("Days Rented:", daysRented);
+    console.log("Total Price:", totalPrice);
 
     if (isNaN(totalPrice) || totalPrice <= 0) {
       return res.status(400).json({ message: "Failed to calculate total price." });
     }
 
-    booking.totalPrice = totalPrice; // Update the total price
+    booking.totalPrice = totalPrice;
 
-    // Save the updated booking
     await booking.save();
 
-    // Generate the invoice
+    //  Generate invoice
     const invoicePath = await createInvoice({
       _id: booking._id,
       carId: booking.carId,
@@ -393,7 +433,6 @@ export const extendBooking = async (req, res) => {
 
     const invoiceUrl = `${req.protocol}://${req.get("host")}/api/bookcar/invoices/invoice_${booking._id}.pdf`;
 
-    // Return the updated booking and invoice URL
     res.status(200).json({
       message: "Booking extended successfully",
       booking,
@@ -405,6 +444,7 @@ export const extendBooking = async (req, res) => {
   }
 };
 
+
 // GET BOOKING DETAIL Date AND TIME
 export const GetBookingDetail=async (req,res)=>{
   const { bookingId } = req.params;
@@ -412,13 +452,20 @@ export const GetBookingDetail=async (req,res)=>{
   console.log("User ID in request:", userId);
   console.log("Booking ID in request:", bookingId);
   try {
-    const booking = await Booking.findById(bookingId);
+    const booking = await Booking.findById(bookingId).populate("carId");
     console.log("booking",booking)
     if (!booking || booking.userId.toString() !== userId) {
     return res.status(404).json({ message: "Booking not found or unauthorized access."});
     }
+    const carImages=booking.carId?.images;
      console.log("response",booking)
-    return res.status(200).json(booking);
+    return res.status(200).json({
+      _id: booking._id,
+      rentalStartDate: booking.rentalStartDate,
+      rentalEndDate: booking.rentalEndDate,
+      totalPrice: booking.totalPrice,
+      images: carImages,
+    });
   } catch (error) {
     console.error("Error canceling booking:", error);
     return res.status(500).json({ message: "Server error. Please try again later." });
