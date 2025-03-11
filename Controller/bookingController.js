@@ -189,6 +189,7 @@ export const getUserBookings = async (req, res) => {
       ...booking.toObject(),
       carDetails: booking.carId, // Car details populated
       showroomDetails: booking.showroomId, // Showroom details populated
+      startDate:booking.rentalStartDate
     }));
 
     res.status(200).json(bookingsWithDetails);
