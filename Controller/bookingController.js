@@ -204,7 +204,6 @@ export const getUserBookings = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
-
 // UPDATE BOOKING
 export const updateBooking = async (req, res) => {
   const { bookingId } = req.params;
@@ -404,6 +403,27 @@ export const extendBooking = async (req, res) => {
     res.status(500).json({ message: "Error extending booking", error });
   }
 };
+
+// GET BOOKING DETAIL Date AND TIME
+export const GetBookingDetail=async (req,res)=>{
+  const { bookingId } = req.params;
+  const userId = req.user;
+  console.log("User ID in request:", userId);
+  console.log("Booking ID in request:", bookingId);
+  try {
+    const booking = await Booking.findById(bookingId);
+    console.log("booking",booking)
+    if (!booking || booking.userId.toString() !== userId) {
+    return res.status(404).json({ message: "Booking not found or unauthorized access."});
+    }
+     console.log("response",booking)
+    return res.status(200).json(booking);
+  } catch (error) {
+    console.error("Error canceling booking:", error);
+    return res.status(500).json({ message: "Server error. Please try again later." });
+  }
+
+}
 
 // export const extendBooking = async (req, res) => {
 //   const { bookingId } = req.params;
