@@ -246,6 +246,56 @@ export const resetPassword = async (req, res) => {
   }
 };
 
+// UPDATE PROFILE LOGIC 
+export const UpdateProfile=async(req,res)=>{
+  const {name,email,phonenum,address,cnic}=req.body
+  const userid=req.user;
+  console.log("userid form middleware",userid);
+  try {
+    const user=await signup.findById(userid);
+    console.log(user)
+    if(!user){
+    return res.status(404).json({message:"User Not Found",user:user})
+    }
+    if(!name||!email||!phonenum||!address||!cnic){
+    return res.status(404).json({message:"Fields all required"});
+    }
+    user.email = email;
+    user.ownerName = name;
+    user.cnic = cnic;
+    user.contactNumber = phonenum;
+    user.address = address;
+    await user.save();
+    const updatedData = {
+      name: user.ownerName,
+      email: user.email,
+      phonenum: user.contactNumber,
+      address: user.address,
+      cnic: user.cnic,
+    };
+    return res.status(200).json({message:"Updated Sucessfully",updatedData});
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating credentials', error });
+    console.log("Error updating credentials")
+  }
+}
+// Get User
+export const GetUser = async (req, res) => {
+  try {
+    const UserId = req.user;
+    console.log(UserId);
+    const user = await signup.findById(UserId).select('-password -role -images -_id -createdAt -updatedAt');
+    if (!user) {
+      return res.status(404).json({ message: "User Not Found" });
+    }
+    console.log(user);
+    res.status(200).json({ userdata:user});
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
 //   this is just for testing purpose
 export const test = (req, res) => {
   res

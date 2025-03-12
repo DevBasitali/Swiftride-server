@@ -64,6 +64,7 @@ export const bookCar = async (req, res) => {
         .status(400)
         .json({ message: "The car is already booked for the selected dates." });
     }
+
     // Create Date objects from the input dates
     const rentalStartDateis = new Date(rentalStartDate);
     const rentalEndDateis = new Date(rentalEndDate);
@@ -95,11 +96,11 @@ export const bookCar = async (req, res) => {
     const daysRented = Math.max(0, Math.ceil(rentalDuration));
     const totalPrice = daysRented * car.rentRate;
 
-    // Format dates as "Tue Dec 10 2024"
-    const formattedRentalStartDate = rentalStartDateis.toDateString();
-    const formattedRentalEndDate = rentalEndDateis.toDateString();
+    // ✅ Format dates as ISO strings to fix moment.js warning
+    const formattedRentalStartDate = rentalStartDateis.toISOString();
+    const formattedRentalEndDate = rentalEndDateis.toISOString();
 
-    // Convert rental times to 12-hour format
+    // ✅ Convert rental times to 12-hour format
     const formatTimeTo12Hour = (time) => {
       const [hour, minute] = time.split(":").map(Number);
       const period = hour >= 12 ? "PM" : "AM";
@@ -110,19 +111,21 @@ export const bookCar = async (req, res) => {
     const formattedRentalStartTime = formatTimeTo12Hour(rentalStartTime);
     const formattedRentalEndTime = formatTimeTo12Hour(rentalEndTime);
 
+    // ✅ Save new booking
     const newBooking = new Booking({
       carId,
       userId,
       showroomId,
-      rentalStartDate: formattedRentalStartDate, // Save as formatted String
-      rentalStartTime: formattedRentalStartTime, // Save in 12-hour format
-      rentalEndDate: formattedRentalEndDate, // Save as formatted String
-      rentalEndTime: formattedRentalEndTime, // Save in 12-hour format
+      rentalStartDate: formattedRentalStartDate, // ISO format
+      rentalStartTime: formattedRentalStartTime, // 12-hour format
+      rentalEndDate: formattedRentalEndDate, // ISO format
+      rentalEndTime: formattedRentalEndTime, // 12-hour format
       totalPrice,
     });
 
     await newBooking.save();
 
+    // ✅ Generate invoice using ISO dates
     const invoicePath = await createInvoice({
       _id: newBooking._id,
       carId,
