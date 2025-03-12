@@ -27,10 +27,10 @@ export const createInvoice = async (bookingDetails) => {
   doc.fillColor("white").fontSize(30).text("RentRush Invoice", 50, 40);
 
   // Invoice Details
-  doc.fillColor("black").fontSize(18).text("Invoice", 380, 40);
-  doc.fontSize(12).text(`#${bookingDetails._id}`, 380, 55);
-  doc.text(`Invoice Date: ${moment().format("MMMM Do YYYY")}`, 380, 70);
-  doc.text(`Due Date: ${moment().add(1, "day").format("MMMM Do YYYY")}`, 380, 85);
+  doc.fillColor("black").fontSize(18).text("Invoice", 390, 40);
+  doc.fontSize(11).text(`#${bookingDetails._id}`, 390, 55);
+  doc.text(`Invoice Date: ${moment().format("MMMM Do YYYY")}`, 390, 65);
+  doc.text(`Due Date: ${moment().add(1, "day").format("MMMM Do YYYY")}`, 390, 75);
 
   // Billing Information
   doc.fillColor("black").fontSize(14).text("Billed To:", 50, 150);
@@ -41,20 +41,28 @@ export const createInvoice = async (bookingDetails) => {
 
   // Table Headers
   doc.moveTo(50, 250).lineTo(550, 250).stroke();
-  doc.fontSize(12).text("Description", 50, 260).text("Date", 200, 260).text("Daily Rent", 350, 260).text("Amount", 450, 260);
+  doc.fontSize(12)
+    .text("Description", 50, 260)
+    .text("Start Date & Time", 180, 260)
+    .text("End Date & Time", 300, 260)
+    .text("Daily Rent", 410, 260)
+    .text("Amount", 480, 260);
   doc.moveTo(50, 280).lineTo(550, 280).stroke();
 
   // Table Data
   doc.fontSize(12)
     .text(`${car.carBrand} ${car.carModel} (${car.color})`, 50, 290)
-    .text(`${moment(bookingDetails.rentalStartDate).format("YYYY-MM-DD")} ${bookingDetails.rentalStartTime}`, 200, 290)
-    .text(`${car.rentRate.toFixed(2)} Rs`, 350, 290)
-    .text(`${bookingDetails.totalPrice.toFixed(2)} Rs`, 450, 290);
+    .text(`${moment(bookingDetails.rentalStartDate).format("YYYY-MM-DD")}`, 180, 290)
+    .text(`${bookingDetails.rentalStartTime}`, 180, 305) // Start time below the date
+    .text(`${moment(bookingDetails.rentalEndDate).format("YYYY-MM-DD")}`, 300, 290)
+    .text(`${bookingDetails.rentalEndTime}`, 300, 305) // End time below the date
+    .text(`${car.rentRate.toFixed(0)} Rs`, 410, 290)
+    .text(`${bookingDetails.totalPrice.toFixed(0)} Rs`, 480, 290);
   
   // Subtotal & Total
   const subtotal = bookingDetails.totalPrice;
   doc.moveTo(50, 320).lineTo(550, 320).stroke();
-  doc.fontSize(12).text("Subtotal", 350, 330).text(`${subtotal.toFixed(2)} Rs`, 450, 330);
+  doc.fontSize(12).text("Subtotal", 410, 330).text(`${subtotal.toFixed(0)} Rs`, 480, 330);
 
   // Footer
   doc.moveTo(50, 500).lineTo(550, 500).stroke();
