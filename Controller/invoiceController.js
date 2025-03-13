@@ -25,7 +25,7 @@ export const createInvoice = async (bookingDetails) => {
   // Header Section
   doc.rect(0, 0, 612, 100).fill("#4A90E2");
   doc.fillColor("white").fontSize(30).text("RentRush Invoice", 50, 40);
-
+  doc.fillColor("white").fontSize(14).text(`Invoice Type: ${bookingDetails.invoiceType}`, 50, 70);
   // Invoice Details
   doc.fillColor("black").fontSize(18).text("Invoice", 390, 40);
   doc.fontSize(11).text(`#${bookingDetails._id}`, 390, 55);
