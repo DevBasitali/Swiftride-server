@@ -187,7 +187,9 @@ export const getUserBookings = async (req, res) => {
       ...booking.toObject(),
       carDetails: booking.carId, // Car details populated
       showroomDetails: booking.showroomId, // Showroom details populated
-      startDate:booking.rentalStartDate
+      startDate:booking.rentalStartDate,
+      EndDate:booking.rentalEndDate,
+      EndTime:booking.rentalEndTime
     }));
 
     res.status(200).json(bookingsWithDetails);
@@ -515,7 +517,6 @@ export const Return_car = async (req, res) => {
     if (!car) {
       return res.status(404).json({ message: "car not found" });
     }
-
     return res.status(200).json({ message: "Return request sent to showroom  owner for approved" });
   } catch (error) {
     console.log(error);
