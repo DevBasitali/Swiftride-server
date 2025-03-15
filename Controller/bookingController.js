@@ -130,6 +130,7 @@ export const bookCar = async (req, res) => {
       rentalStartTime: formattedRentalStartTime,
       rentalEndTime: formattedRentalEndTime,
       totalPrice,
+      invoiceType:"New Booking Invoice Generated",
     });
 
     car.availability = "Rented Out";
@@ -235,7 +236,7 @@ export const updateBooking = async (req, res) => {
     const rentalStartDateTime = new Date(`${rentalStartDate} ${rentalStartTime}`);
 
     // Restrict updates if the rental start date is less than the current date
-    if (rentalStartDateTime < currentTime) {
+    if (rentalStartDateTime <= currentTime) {
       return res.status(400).json({ 
         message: "Rental start date must be greater than or equal to the current date." 
       });
@@ -502,21 +503,20 @@ export const cancelBooking = async (req, res) => {
 export const Return_car = async (req, res) => {
   try {
     const { BookingId } = req.params;
+    console.log("bookingId",BookingId)
     const booking = await Booking.findById(BookingId).populate("carId");
+    console.log("BOOKING",booking);
     if (!booking) {
       return res.status(404).json({ message: "Booking not found" });
     }
     console.log("booking details", booking);
     const car = await Car.findById(booking.carId._id);
+    console.log("Car",car);
     if (!car) {
       return res.status(404).json({ message: "car not found" });
     }
-    io.emit(`notification${car.userId}`, {
-      message: "Car return request recieved",
-    });
-    return res
-      .status(200)
-      .json({ message: "Return request sent to showroom  owner for approved" });
+
+    return res.status(200).json({ message: "Return request sent to showroom  owner for approved" });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Something went wrong", error });
