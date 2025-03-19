@@ -2,7 +2,6 @@ import moment from "moment";
 import Booking from "../Model/bookingModel.js";
 import Car from "../Model/Car.js";
 import { createInvoice } from "./invoiceController.js";
-import { io } from "../index.js";
 
 // BOOKED car controller
 export const bookCar = async (req, res) => {
@@ -68,7 +67,8 @@ export const bookCar = async (req, res) => {
     // Create Date objects from the input dates
     const rentalStartDateis = new Date(rentalStartDate);
     const rentalEndDateis = new Date(rentalEndDate);
-
+    console.log("rentStartDate",rentalStartDate)
+    console.log("rentEndDate",rentalEndDate)
     const now = new Date();
     now.setHours(0, 0, 0, 0);
 
@@ -83,16 +83,16 @@ export const bookCar = async (req, res) => {
         .status(400)
         .json({ message: "Rental end date must be in the present or future." });
     }
-
-    if (rentalEndDateis < rentalStartDateis) {
+    if (rentalStartDate===rentalEndDate) {
       return res
         .status(400)
         .json({ message: "End date must be after the start date." });
     }
-
     // Calculate the rental duration including the last day
-    const rentalDuration =
-      (rentalEndDateis - rentalStartDateis) / (1000 * 60 * 60 * 24) + 1;
+    const rentalDuration =(rentalEndDateis - rentalStartDateis) / (1000 * 60 * 60 * 24);
+    if(rentalDuration===0){
+       rentalDuration=1
+    }
     const daysRented = Math.max(0, Math.ceil(rentalDuration));
     const totalPrice = daysRented * car.rentRate;
     const formattedRentalStartDate = rentalStartDateis.toISOString().slice(0, 10); // Sirf date tak format kiya
@@ -189,7 +189,8 @@ export const getUserBookings = async (req, res) => {
       showroomDetails: booking.showroomId, // Showroom details populated
       startDate:booking.rentalStartDate,
       EndDate:booking.rentalEndDate,
-      EndTime:booking.rentalEndTime
+      EndTime:booking.rentalEndTime,
+      StartTime:booking.rentalStartTime
     }));
 
     res.status(200).json(bookingsWithDetails);
