@@ -60,6 +60,7 @@ export const getAllCars = async (req, res) => {
       return res.status(401).json("Unauthorized");
     }
     const cars = await car_Model.find({ userId });
+    // console.log(cars);
     return res.status(200).json(cars);
   } catch (error) {
     console.error("Error fetching cars:", error);
@@ -71,7 +72,7 @@ export const getAllCars = async (req, res) => {
 
 export const getCars = async (req, res) => {
   try {
-    const cars = await car_Model.find();
+    const cars = await car_Model.find().populate('userId','ownerName showroomName address');
     return res.status(200).json(cars);
   } catch (error) {
     console.error("Error fetching cars:", error);
