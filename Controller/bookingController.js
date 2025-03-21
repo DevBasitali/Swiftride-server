@@ -230,6 +230,7 @@ export const updateBooking = async (req, res) => {
 
     // Find the booking by ID
     const booking = await Booking.findById(bookingId).populate("carId");
+   
     if (!booking) {
       return res.status(404).json({ message: "Booking not found" });
     }
@@ -292,8 +293,7 @@ export const updateBooking = async (req, res) => {
       return res.status(404).json({ message: "Car not found" });
     }
 
-    const rentalDuration =
-      (updatedRentalEndDateTime - updatedRentalStartDateTime) / (1000 * 60 * 60 * 24) + 1;
+    const rentalDuration =(updatedRentalEndDateTime - updatedRentalStartDateTime) / (1000 * 60 * 60 * 24);
     const daysRented = Math.max(0, Math.ceil(rentalDuration));
     const totalPrice = daysRented * car.rentRate;
 
