@@ -1,7 +1,7 @@
 import moment from "moment";
 import Booking from "../Model/bookingModel.js";
 import Car from "../Model/Car.js";
-import { createInvoice } from "./invoiceController.js";
+import { createNewInvoice,updateInvoice,extendInvoice } from "./invoiceController.js";
 
 // BOOKED car controller
 export const bookCar = async (req, res) => {
@@ -121,7 +121,8 @@ export const bookCar = async (req, res) => {
     });
 
     await newBooking.save();
-    const invoicePath = await createInvoice({
+    // create invoice
+    const invoicePath = await createNewInvoice({
       _id: newBooking._id,
       carId,
       userId,
@@ -303,7 +304,7 @@ export const updateBooking = async (req, res) => {
     await booking.save();
 
     // Generate invoice
-    const invoicePath = await createInvoice({
+    const invoicePath = await updateInvoice({
       _id: booking._id,
       carId: booking.carId,
       userId: booking.userId,
@@ -411,7 +412,7 @@ export const extendBooking = async (req, res) => {
     await booking.save();
 
     //  Generate invoice
-    const invoicePath = await createInvoice({
+    const invoicePath = await extendInvoice({
       _id: booking._id,
       carId: booking.carId,
       userId: booking.userId,
