@@ -120,10 +120,9 @@ export const bookCar = async (req, res) => {
       totalPrice,
     });
 
-    await newBooking.save();
     // create invoice
     const invoicePath = await generateInvoice({
-      _id: userId,
+      _id:newBooking._id,
       carId,
       userId,
       rentalStartDate: formattedRentalStartDate,
@@ -133,14 +132,13 @@ export const bookCar = async (req, res) => {
       totalPrice,
       invoiceType:"New Booking Invoice Generated",
     });
-
-    car.availability = "Rented Out";
-    await car.save();
-
     const invoiceUrl = `${req.protocol}://${req.get(
       "host"
-    )}/api/bookcar/invoices/invoice_${userId}.pdf`;
+    )}/api/bookcar/invoices/invoice_${newBooking._id}.pdf`;
 
+    await newBooking.save();
+    car.availability = "Rented Out";
+    await car.save();
     res.status(201).json({
       message: "Car booked successfully",
       booking: newBooking,
@@ -161,6 +159,7 @@ export const bookCar = async (req, res) => {
       .json({ message: "Server error. Please try again later." });
   }
 };
+
 // GET USER BOOKING
 export const getUserBookings = async (req, res) => {
   console.log("Received Cookies:", req.cookies);
@@ -207,6 +206,7 @@ export const getUserBookings = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
+
 // Update booking
 export const updateBooking = async (req, res) => {
   const { bookingId } = req.params;
@@ -305,7 +305,7 @@ export const updateBooking = async (req, res) => {
 
     // Generate invoice
     const invoicePath = await generateInvoice({
-      _id: booking.userId,
+      _id: booking._id,
       carId: booking.carId,
       userId: booking.userId,
       rentalStartDate: booking.rentalStartDate,
@@ -316,7 +316,7 @@ export const updateBooking = async (req, res) => {
       invoiceType: "Updated Booking Invoice Generated",
     });
 
-    const invoiceUrl = `${req.protocol}://${req.get("host")}/api/bookcar/invoices/invoice_${booking.userId}.pdf`;
+    const invoiceUrl = `${req.protocol}://${req.get("host")}/api/bookcar/invoices/invoice_${booking._id}.pdf`;
     res.status(200).json({
       message: "Booking updated successfully",
       booking,

@@ -11,17 +11,17 @@ const invoicesDir = path.join(__dirname, "../invoices");
 export const generateInvoice = async (bookingDetails) => {
   const car = await Car.findById(bookingDetails.carId);
   const user = await User.findById(bookingDetails.userId);
-  const invoicePath = path.join(invoicesDir, `invoice_${bookingDetails._id}.pdf`);
+  const invoicePath = path.join(invoicesDir,`invoice_${bookingDetails._id}.pdf`);
 // save through booking 
   if (fs.existsSync(invoicePath)) {
     // Read Existing file    
     const existingPdfBytes = fs.readFileSync(invoicePath);
     // Existing PDF load
     const pdfDoc = await PDFLibDocument.load(existingPdfBytes);
-    //  New page add karo
+    //  New page add 
     const page = pdfDoc.addPage([600, 400]);
     const { height } = page.getSize();
-    //  Updated data add karo
+    //  Updated data add k
     page.drawText(`${bookingDetails.invoiceType}`, {
       x: 50,
       y: height - 50,
