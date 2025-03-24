@@ -139,7 +139,7 @@ export const bookCar = async (req, res) => {
 
     const invoiceUrl = `${req.protocol}://${req.get(
       "host"
-    )}/api/bookcar/invoices/invoice_${newBooking._id}.pdf`;
+    )}/api/bookcar/invoices/invoice_${userId}.pdf`;
 
     res.status(201).json({
       message: "Car booked successfully",
@@ -305,7 +305,7 @@ export const updateBooking = async (req, res) => {
 
     // Generate invoice
     const invoicePath = await generateInvoice({
-      _id: booking._id,
+      _id: booking.userId,
       carId: booking.carId,
       userId: booking.userId,
       rentalStartDate: booking.rentalStartDate,
@@ -316,7 +316,7 @@ export const updateBooking = async (req, res) => {
       invoiceType: "Updated Booking Invoice Generated",
     });
 
-    const invoiceUrl = `${req.protocol}://${req.get("host")}/api/bookcar/invoices/invoice_${userId}.pdf`;
+    const invoiceUrl = `${req.protocol}://${req.get("host")}/api/bookcar/invoices/invoice_${booking.userId}.pdf`;
     res.status(200).json({
       message: "Booking updated successfully",
       booking,
