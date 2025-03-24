@@ -27,6 +27,10 @@ const car_Schema = new mongoose.Schema(
     },
     maintenanceLogs: [maintenanceLogSchema],
     fuelLevel: Number,
+    rentalInfo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Booking",
+    },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Users_data",
@@ -35,5 +39,5 @@ const car_Schema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-const car_Model=mongoose.model('cars',car_Schema);
-export default car_Model
+const car_Model = mongoose.model("cars", car_Schema);
+export default car_Model;

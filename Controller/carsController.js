@@ -59,7 +59,12 @@ export const getAllCars = async (req, res) => {
     if (!userId) {
       return res.status(401).json("Unauthorized");
     }
-    const cars = await car_Model.find({ userId });
+    const cars = await car_Model.find({ userId }).populate({
+      path: "rentalInfo",
+      populate: {
+        path: "userId",
+      },
+    });
     // console.log(cars);
     return res.status(200).json(cars);
   } catch (error) {
@@ -72,7 +77,9 @@ export const getAllCars = async (req, res) => {
 
 export const getCars = async (req, res) => {
   try {
-    const cars = await car_Model.find().populate('userId','ownerName showroomName address');
+    const cars = await car_Model
+      .find()
+      .populate("userId", "ownerName showroomName address");
     return res.status(200).json(cars);
   } catch (error) {
     console.error("Error fetching cars:", error);
@@ -203,8 +210,6 @@ export const searchCar = async (req, res) => {
     return res.status(500).json("Internal server error");
   }
 };
-
-
 
 // Return details api
 export const updateReturnDetails = async (req, res) => {

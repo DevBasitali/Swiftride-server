@@ -135,6 +135,7 @@ export const bookCar = async (req, res) => {
     });
 
     car.availability = "Rented Out";
+    car.rentalInfo = newBooking._id;
     await car.save();
 
     const invoiceUrl = `${req.protocol}://${req.get(
