@@ -1,7 +1,7 @@
 import moment from "moment";
 import Booking from "../Model/bookingModel.js";
 import Car from "../Model/Car.js";
-import { createNewInvoice,updateInvoice,extendInvoice } from "./invoiceController.js";
+import { generateInvoice } from "./invoiceController.js";
 
 // BOOKED car controller
 export const bookCar = async (req, res) => {
@@ -122,8 +122,8 @@ export const bookCar = async (req, res) => {
 
     await newBooking.save();
     // create invoice
-    const invoicePath = await createNewInvoice({
-      _id: newBooking._id,
+    const invoicePath = await generateInvoice({
+      _id: userId,
       carId,
       userId,
       rentalStartDate: formattedRentalStartDate,
@@ -304,7 +304,7 @@ export const updateBooking = async (req, res) => {
     await booking.save();
 
     // Generate invoice
-    const invoicePath = await updateInvoice({
+    const invoicePath = await generateInvoice({
       _id: booking._id,
       carId: booking.carId,
       userId: booking.userId,
@@ -316,7 +316,7 @@ export const updateBooking = async (req, res) => {
       invoiceType: "Updated Booking Invoice Generated",
     });
 
-    const invoiceUrl = `${req.protocol}://${req.get("host")}/api/bookcar/invoices/invoice_${booking._id}.pdf`;
+    const invoiceUrl = `${req.protocol}://${req.get("host")}/api/bookcar/invoices/invoice_${userId}.pdf`;
     res.status(200).json({
       message: "Booking updated successfully",
       booking,
@@ -412,7 +412,7 @@ export const extendBooking = async (req, res) => {
     await booking.save();
 
     //  Generate invoice
-    const invoicePath = await extendInvoice({
+    const invoicePath = await generateInvoice({
       _id: booking._id,
       carId: booking.carId,
       userId: booking.userId,

@@ -5,7 +5,9 @@ import crypto from "crypto";
 import nodemailer from "nodemailer";
 import jwt from "jsonwebtoken";
 import Status_Model from "../Model/showroomStatus.js";
-import { urlencoded } from "express";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from 'url';
 
 export const Signup = async (req, res) => {
   try {
@@ -305,4 +307,41 @@ export const test = (req, res) => {
       userId: req.user,
       role: req.role || "NO ROLE",
     });
+};
+
+export const Getinvoice = async (req, res) => {
+  try {
+    console.log("middlewareid",req.user)
+    const id=req.user
+    const invoicesDir = path.join('./invoices');
+
+    fs.readdir(invoicesDir, (err, files) => {
+      if (err) {
+        console.error("Error reading invoice folder:", err);
+        return res.status(500).json({ message: 'Error reading invoice folder' });
+      }
+
+      const matchingFile = files.find(file => file.includes(id));
+      if (matchingFile) {
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = path.dirname(__filename);
+        const filePath = path.join(__dirname, '../invoices', matchingFile); // matchingFile use karo
+        console.log("Serving file:", filePath);
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'inline; filename="invoice.pdf"');
+        res.sendFile(filePath, (err) => {
+          if (err) {
+            console.error("Error sending file:", err);
+            res.status(500).json({ message: 'Error sending file' });
+          }
+        });
+      } else {
+        return res.status(404).json({ message: 'Invoice not found' });
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching invoice:", error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 };

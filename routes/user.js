@@ -1,6 +1,6 @@
 import express from "express";
 import {body} from 'express-validator'
-import {Signup,login,test,forgotPassword,resetPassword,logout,UpdateProfile,GetUser} from "../Controller/users.js";
+import {Signup,login,test,forgotPassword,resetPassword,logout,UpdateProfile,GetUser,Getinvoice} from "../Controller/users.js";
 import { showAllShowRooms } from "../Controller/showRoom.js";
 import { verifyToken } from "../Middleware/verifyToken.js";
 import multer from "multer";
@@ -37,6 +37,7 @@ router.post("/forgot-password", forgotPassword);
 router.post("/logout", verifyToken, logout);
 router.put("/updateprofile",verifyToken,UpdateProfile)
 router.get("/getuser",verifyToken,GetUser)
+router.get('/getinvoice',verifyToken,Getinvoice);
 //   this is just for testing purpose
 router.get("/test", verifyToken, test);
 router.get("/showrooms", showAllShowRooms);
