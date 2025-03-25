@@ -11,6 +11,7 @@ const invoicesDir = path.join(__dirname, "../invoices");
 export const generateInvoice = async (bookingDetails) => {
   const car = await Car.findById(bookingDetails.carId);
   const user = await User.findById(bookingDetails.userId);
+  const showroom=await User.findById(bookingDetails.showroomId)
   const invoicePath = path.join(invoicesDir,`invoice_${bookingDetails._id}.pdf`);
 // save through booking 
   if (fs.existsSync(invoicePath)) {
@@ -19,7 +20,7 @@ export const generateInvoice = async (bookingDetails) => {
     // Existing PDF load
     const pdfDoc = await PDFLibDocument.load(existingPdfBytes);
     //  New page add 
-    const page = pdfDoc.addPage([600, 400]);
+    const page = pdfDoc.addPage([700, 500]);
     const { height } = page.getSize();
     //  Updated data add k
     page.drawText(`${bookingDetails.invoiceType}`, {
@@ -32,7 +33,7 @@ export const generateInvoice = async (bookingDetails) => {
     page.drawText(`Booking ID: ${bookingDetails._id}`, { x: 50, y: 320, size: 15 });
         //  Billed To
         page.drawText('Billed To:', { x: 50, y: height - 150, size: 14 });
-        page.drawText(`${user.ownerName}\n${user.email}\n${user.address}\n${user.contactNumber}`, { x: 50, y: height - 180, size: 12 });
+        page.drawText(`${user.ownerName}\n${user.email}\n${user.address}\n${user.contactNumber}`, { x: 40, y: height - 170, size: 12 });
        //  Table Header
        page.drawLine({ start: { x: 50, y: height - 250 }, end: { x: 550, y: height - 250 }, thickness: 1 });
        page.drawText('Description', { x: 50, y: height - 270, size: 12 });
@@ -86,12 +87,12 @@ export const generateInvoice = async (bookingDetails) => {
 
     //  Billed To
     page.drawText('Billed To:', { x: 50, y: height - 150, size: 14 });
-    page.drawText(`${user.ownerName}\n${user.email}\n${user.address}\n${user.contactNumber}`, { x: 50, y: height - 180, size: 12 });
+    page.drawText(`${user.ownerName}\n${user.email}\n${user.address}\n${user.contactNumber}`, { x: 40, y: height - 170, size: 12 });
 
     //  From
     page.drawText('From:', { x: 350, y: height - 150, size: 14 });
-    page.drawText('RentRush Inc.\nrentrush.com\n1234 Car Rental Avenue\n(+254) 123-456-789', { x: 350, y: height - 180, size: 12 });
-
+    page.drawText(`${showroom.email}\n${showroom.address}\n${showroom.contactNumber}`, { x: 350, y: height - 170, size: 12 });
+                  
     //  Table Header
     page.drawLine({ start: { x: 50, y: height - 250 }, end: { x: 550, y: height - 250 }, thickness: 1 });
     page.drawText('Description', { x: 50, y: height - 270, size: 12 });

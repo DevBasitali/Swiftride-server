@@ -63,21 +63,22 @@ export const bookCar = async (req, res) => {
         .status(400)
         .json({ message: "The car is already booked for the selected dates." });
     }
-
     // Create Date objects from the input dates
     const rentalStartDateis = new Date(rentalStartDate);
     const rentalEndDateis = new Date(rentalEndDate);
-    console.log("rentStartDate",rentalStartDate)
-    console.log("rentEndDate",rentalEndDate)
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-
+    const CurrentDate= new Date();
+    const CurrentDateString=CurrentDate.toLocaleDateString('en-CA');
+    const userTime = new Date(`${CurrentDateString} ${rentalStartTime}`)
+  if(userTime<CurrentDate){
+    return res.status(400).json({message:"Rental Start time must be in future"});
+  }
     if (rentalStartDateis < now) {
       return res.status(400).json({
         message: "Rental start date must be in the present or future.",
       });
     }
-
     if (rentalEndDateis < now) {
       return res
         .status(400)
@@ -119,12 +120,12 @@ export const bookCar = async (req, res) => {
       rentalEndTime: formattedRentalEndTime, // 12-hour format
       totalPrice,
     });
-
     // create invoice
     const invoicePath = await generateInvoice({
       _id:newBooking._id,
       carId,
       userId,
+      showroomId,
       rentalStartDate: formattedRentalStartDate,
       rentalEndDate: formattedRentalEndDate,
       rentalStartTime: formattedRentalStartTime,
