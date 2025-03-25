@@ -59,7 +59,12 @@ export const getAllCars = async (req, res) => {
     if (!userId) {
       return res.status(401).json("Unauthorized");
     }
-    const cars = await car_Model.find({ userId });
+    const cars = await car_Model.find({ userId }).populate({
+      path: "rentalInfo",
+      populate: {
+        path: "userId",
+      },
+    });
     // console.log(cars);
     return res.status(200).json(cars);
   } catch (error) {
@@ -72,7 +77,9 @@ export const getAllCars = async (req, res) => {
 
 export const getCars = async (req, res) => {
   try {
-    const cars = await car_Model.find().populate('userId','ownerName showroomName address');
+    const cars = await car_Model
+      .find()
+      .populate("userId", "ownerName showroomName address");
     return res.status(200).json(cars);
   } catch (error) {
     console.error("Error fetching cars:", error);
@@ -119,7 +126,7 @@ export const updateCar = async (req, res) => {
         bodyType,
         transmission,
       },
-      { new: true, runValidators: true } // Options to return the updated document and run validations
+      { new: true, runValidators: true }, // Options to return the updated document and run validations
     );
 
     if (!updatedCar) {
@@ -204,8 +211,6 @@ export const searchCar = async (req, res) => {
   }
 };
 
-
-
 // Return details api
 export const updateReturnDetails = async (req, res) => {
   const { carId, mileage, fuelLevel } = req.body;
@@ -220,7 +225,7 @@ export const updateReturnDetails = async (req, res) => {
     const car = await car_Model.findByIdAndUpdate(
       carId,
       { mileage, fuelLevel },
-      { new: true, runValidators: true, context: "query" } // update only specified fields
+      { new: true, runValidators: true, context: "query" }, // update only specified fields
     );
     if (!car) {
       return res.status(404).json({ message: "Car not found" });
