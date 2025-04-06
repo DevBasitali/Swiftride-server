@@ -6,7 +6,9 @@ import nodemailer from "nodemailer";
 import jwt from "jsonwebtoken";
 import Status_Model from "../Model/showroomStatus.js";
 import path from "path";
-import fs from "fs";
+import { promises as fsPromises } from "fs";
+import Booking from "../Model/bookingModel.js";
+import car_Model from "../Model/Car.js";
 import { fileURLToPath } from 'url';
 
 export const Signup = async (req, res) => {
@@ -309,39 +311,66 @@ export const test = (req, res) => {
     });
 };
 
+// get all invoice for view 
 export const Getinvoice = async (req, res) => {
   try {
-    console.log("middlewareid",req.user)
-    const id=req.user
-    const invoicesDir = path.join('./invoices');
+    const userId = req.user;
+    console.log("Middleware User ID:", userId);
+    const bookings = await Booking.find({ userId });
+    console.log("Bookings:", bookings);
 
-    fs.readdir(invoicesDir, (err, files) => {
-      if (err) {
-        console.error("Error reading invoice folder:", err);
-        return res.status(500).json({ message: 'Error reading invoice folder' });
-      }
+    if (!bookings.length) {
+      return res.status(404).json({ message: "No bookings found for this user" });
+    }
 
-      const matchingFile = files.find(file => file.includes(id));
-      if (matchingFile) {
-        const __filename = fileURLToPath(import.meta.url);
-        const __dirname = path.dirname(__filename);
-        const filePath = path.join(__dirname, '../invoices', matchingFile); // matchingFile use karo
-        console.log("Serving file:", filePath);
+    const bookingIds = bookings.map((booking) => booking._id.toString());
+    console.log("Booking IDs:", bookingIds);
 
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'inline; filename="invoice.pdf"');
-        res.sendFile(filePath, (err) => {
-          if (err) {
-            console.error("Error sending file:", err);
-            res.status(500).json({ message: 'Error sending file' });
-          }
-        });
-      } else {
-        return res.status(404).json({ message: 'Invoice not found' });
-      }
+    const invoicesDir = path.join(process.cwd(), "invoices");
+    const files = await fsPromises.readdir(invoicesDir);
+    console.log("Files in invoices directory:", files);
+
+    const matchingFiles = files.filter((file) =>
+      bookingIds.some((bookingId) => file.includes(bookingId))
+    );
+    console.log("Matching Files:", matchingFiles);
+
+    if (matchingFiles.length === 0) {
+      return res.status(404).json({ message: "No invoices found for your bookings" });
+    }
+
+    // Create array of invoice objects with URLs
+    const invoices = matchingFiles.map((file) => ({
+      bookingId: bookingIds.find((id) => file.includes(id)),
+      invoiceUrl: `http://localhost:${process.env.PORT}/invoices/${file}`, 
+    }));
+    res.status(200).json({
+      success: true,
+      data: invoices,
     });
   } catch (error) {
-    console.error("Error fetching invoice:", error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error("Error fetching invoices:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
+
+//  getcarsall for specific showroom
+export const getshowroomcar=async(req,res)=>{
+  try {
+    const userid=req.user;
+    const{showroomid}=req.params;
+    console.log("userid",userid);
+    console.log("showroomid",showroomid)
+    if(!userid){
+     return res.status(404).json({message:"unouthorizeduser user"})
+    }
+    const totalcar= await car_Model.find({userId:showroomid})
+    if(!totalcar){
+     return res.status(400).json({message:"no cars of this showroom"});
+    }
+    console.log("totalcars",totalcar)
+     return res.status(200).json({totalcar:totalcar});
+  } catch (error) {
+    console.log("error in getallcars",error)
+  }
+}

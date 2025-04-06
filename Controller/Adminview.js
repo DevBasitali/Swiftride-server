@@ -54,7 +54,8 @@ import Status_Model from "../Model/showroomStatus.js";
          clientData.push(item);
        }
      });
-     console.log(showroomData)
+    //  console.log("showroomdata",showroomData)
+    //  console.log("clientdata",clientData)
      res.json({
         showroomSection: showroomData,
         clientSection: clientData,
