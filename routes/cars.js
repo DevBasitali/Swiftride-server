@@ -9,6 +9,8 @@ import express from 'express'
    updateReturnDetails,
    completeMaintenance,
    getCars,
+   getAllReturnCars,
+   startMaintenance,
  } from "../Controller/carsController.js";
  import { verifyToken } from "../Middleware/verifyToken.js";
 
@@ -64,11 +66,18 @@ router.put(
   updateCar
 );
 router.get("/get-all-cars", verifyToken, isShowroomApproved, getAllCars);
+router.get("/get-all-return-cars", verifyToken, isShowroomApproved, getAllReturnCars);
 router.get("/get-cars", verifyToken, getCars);
 router.delete("/delete/:id", verifyToken, isShowroomApproved, removeCar);
 router.get("/search", searchCar);
 router.post("/return", verifyToken, updateReturnDetails);
 // Route for marking maintenance as complete
+router.post(
+  "/start-maintenance",
+  verifyToken,
+  isShowroomApproved,
+  startMaintenance
+);
 router.post(
   "/complete-maintenance",
   verifyToken,

@@ -1,4 +1,5 @@
 import car_Model from "../Model/Car.js";
+import { generateInvoice } from "./invoiceController.js";
 export const addCar = async (req, res) => {
   try {
     // console.log(req.body);
@@ -14,6 +15,10 @@ export const addCar = async (req, res) => {
       mileage,
       bodyType,
       transmission,
+      seatCapacity,
+      luggageCapacity,
+      fuelType,
+      carFeatures,
     } = req.body;
 
     if (![carBrand, rentRate, carModel, year, engineType].every(Boolean)) {
@@ -40,6 +45,10 @@ export const addCar = async (req, res) => {
       bodyType,
       bodyType,
       transmission,
+      seatCapacity,
+      luggageCapacity,
+      fuelType,
+      carFeatures,
     });
     // console.log(req.body);
 
@@ -65,6 +74,34 @@ export const getAllCars = async (req, res) => {
         path: "userId",
       },
     });
+    // console.log(cars);
+    return res.status(200).json(cars);
+  } catch (error) {
+    console.error("Error fetching cars:", error);
+    return res
+      .status(500)
+      .json("An internal server error occurred. Please try again later.");
+  }
+};
+
+export const getAllReturnCars = async (req, res) => {
+  try {
+    const userId = req.user;
+    if (!userId) {
+      return res.status(401).json("Unauthorized");
+    }
+    const cars = await car_Model
+      .find({ userId })
+      .populate({
+        path: "rentalInfo",
+        populate: {
+          path: "userId",
+        },
+      })
+      .where({
+        availability: ["Pending Return" , "In Maintenance"] ,
+      });
+
     // console.log(cars);
     return res.status(200).json(cars);
   } catch (error) {
@@ -103,6 +140,10 @@ export const updateCar = async (req, res) => {
       mileage,
       bodyType,
       transmission,
+      seatCapacity,
+      luggageCapacity,
+      fuelType,
+      carFeatures,
     } = req.body;
 
     if (req.role !== "showroom") {
@@ -125,8 +166,12 @@ export const updateCar = async (req, res) => {
         mileage,
         bodyType,
         transmission,
+        seatCapacity,
+        luggageCapacity,
+        fuelType,
+        carFeatures,
       },
-      { new: true, runValidators: true }, // Options to return the updated document and run validations
+      { new: true, runValidators: true } // Options to return the updated document and run validations
     );
 
     if (!updatedCar) {
@@ -225,7 +270,7 @@ export const updateReturnDetails = async (req, res) => {
     const car = await car_Model.findByIdAndUpdate(
       carId,
       { mileage, fuelLevel },
-      { new: true, runValidators: true, context: "query" }, // update only specified fields
+      { new: true, runValidators: true, context: "query" } // update only specified fields
     );
     if (!car) {
       return res.status(404).json({ message: "Car not found" });
@@ -264,11 +309,85 @@ export const addMaintenanceLog = async (req, res) => {
 };
 
 // Set car status to "Available" after maintenance
+export const startMaintenance = async (req, res) => {
+  try {
+    const {
+      carId,
+      showroomId,
+      rentalStartDate,
+      rentalStartTime,
+      rentalEndDate,
+      rentalEndTime,
+    } = req.body;
+
+    const car = await car_Model.findById(carId).populate("rentalInfo");
+    if (!car) return res.status(404).json({ message: "Car not found" });
+
+    const rentalStartDateis = new Date(rentalStartDate);
+    const rentalEndDateis = new Date(rentalEndDate);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    // Calculate the rental duration including the last day
+    let rentalDuration =
+      (rentalEndDateis - rentalStartDateis) / (1000 * 60 * 60 * 24);
+    if (rentalDuration === 0) {
+      rentalDuration = 1;
+    }
+    const daysRented = Math.max(0, Math.ceil(rentalDuration));
+    const totalPrice = daysRented * car.rentRate;
+    const formattedRentalStartDate = rentalStartDateis
+      .toISOString()
+      .slice(0, 10); // Sirf date tak format kiya
+    const formattedRentalEndDate = rentalEndDateis.toISOString().slice(0, 10);
+
+    // ✅ Convert rental times to 12-hour format
+    const formatTimeTo12Hour = (time) => {
+      const [hour, minute] = time.split(":").map(Number);
+      const period = hour >= 12 ? "PM" : "AM";
+      const formattedHour = hour % 12 || 12; // Convert hour to 12-hour format
+      return `${formattedHour}:${minute.toString().padStart(2, "0")} ${period}`;
+    };
+
+    const formattedRentalStartTime = formatTimeTo12Hour(rentalStartTime);
+    const formattedRentalEndTime = formatTimeTo12Hour(rentalEndTime);
+    if (req.role !== "showroom") {
+      return res
+        .status(403)
+        .json("Access denied. Only showroom owners can complete maintenance");
+    }
+
+    car.availability = "In Maintenance";
+    await car.save();
+    console.log(car.rentalInfo?.userId?._id);
+
+    const invoicePath = await generateInvoice({
+      _id: car.rentalInfo?._id,
+      carId,
+      userId: car.rentalInfo?.userId,
+      showroomId,
+      rentalStartDate: formattedRentalStartDate,
+      rentalEndDate: formattedRentalEndDate,
+      rentalStartTime: formattedRentalStartTime,
+      rentalEndTime: formattedRentalEndTime,
+      totalPrice,
+      invoiceType: "Maintenance Invoice Generated",
+      updateCount: 0,
+    });
+
+    res.status(200).json({ message: "Car status updated to Available", car });
+  } catch (error) {
+    console.error("Error starting maintenance:", error);
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
+// Set car status to "Available" after maintenance
 export const completeMaintenance = async (req, res) => {
   const { carId } = req.body;
 
   try {
-    if (req.roel !== "showroom") {
+    if (req.role !== "showroom") {
       return res
         .status(403)
         .json("Access denied. Only showroom owners can complete maintenance");

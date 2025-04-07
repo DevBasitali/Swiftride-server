@@ -69,12 +69,14 @@ export const bookCar = async (req, res) => {
     console.log("rentEndDate", rentalEndDate);
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-    const CurrentDate= new Date();
-    const CurrentDateString=CurrentDate.toLocaleDateString('en-CA');
-    const userTime = new Date(`${CurrentDateString} ${rentalStartTime}`)
-  if(userTime<CurrentDate){
-    return res.status(400).json({message:"Rental Start time must be in future"});
-  }
+    const CurrentDate = new Date();
+    const CurrentDateString = CurrentDate.toLocaleDateString("en-CA");
+    const userTime = new Date(`${CurrentDateString} ${rentalStartTime}`);
+    if (userTime < CurrentDate) {
+      return res
+        .status(400)
+        .json({ message: "Rental Start time must be in future" });
+    }
     if (rentalStartDateis < now) {
       return res.status(400).json({
         message: "Rental start date must be in the present or future.",
@@ -128,7 +130,7 @@ export const bookCar = async (req, res) => {
     await newBooking.save();
     // create invoice
     const invoicePath = await generateInvoice({
-      _id:newBooking._id,
+      _id: newBooking._id,
       carId,
       userId,
       showroomId,
@@ -138,7 +140,7 @@ export const bookCar = async (req, res) => {
       rentalEndTime: formattedRentalEndTime,
       totalPrice,
       invoiceType: "New Booking Invoice Generated",
-      updateCount: 0
+      updateCount: 0,
     });
 
     car.availability = "Rented Out";
@@ -333,11 +335,13 @@ export const updateBooking = async (req, res) => {
       rentalEndTime: booking.rentalEndTime,
       totalPrice,
       invoiceType: "Updated Booking Invoice Generated",
-      updateCount: 1
+      updateCount: 1,
     });
     // Save the updated booking
     await booking.save();
-    const invoiceUrl = `${req.protocol}://${req.get("host")}/api/bookcar/invoices/invoice_${booking.userId}.pdf`;
+    const invoiceUrl = `${req.protocol}://${req.get(
+      "host"
+    )}/api/bookcar/invoices/invoice_${booking.userId}.pdf`;
     res.status(200).json({
       message: "Booking updated successfully",
       booking,
@@ -453,10 +457,12 @@ export const extendBooking = async (req, res) => {
       rentalEndTime: booking.rentalEndTime,
       totalPrice,
       invoiceType: "Extend Booking Invoice Generated",
-      updateCount: 2
+      updateCount: 2,
     });
 
-    const invoiceUrl = `${req.protocol}://${req.get("host")}/api/bookcar/invoices/invoice_${booking._id}.pdf`;
+    const invoiceUrl = `${req.protocol}://${req.get(
+      "host"
+    )}/api/bookcar/invoices/invoice_${booking._id}.pdf`;
 
     res.status(200).json({
       message: "Booking extended successfully",
@@ -551,19 +557,23 @@ export const Return_car = async (req, res) => {
     const { BookingId } = req.params;
     console.log("bookingId", BookingId);
     const booking = await Booking.findById(BookingId).populate("carId");
-    console.log("BOOKING", booking);
     if (!booking) {
       return res.status(404).json({ message: "Booking not found" });
     }
-    console.log("booking details", booking);
     const car = await Car.findById(booking.carId._id);
-    console.log("Car", car);
     if (!car) {
       return res.status(404).json({ message: "car not found" });
     }
+    if (car.availability === "Available") {
+      return res.status(400).json({ message: "Car is already available" });
+    }
+    // Update car availability
+    car.availability = "Pending Return";
+
+    car.save();
     return res
       .status(200)
-      .json({ message: "Return request sent to showroom  owner for approved" });
+      .json({ message: "Return request sent to showroom owner for approval" });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Something went wrong", error });
