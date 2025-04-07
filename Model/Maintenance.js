@@ -22,7 +22,7 @@ const car_Schema = new mongoose.Schema(
     },
     availability: {
       type: String,
-      enum: ["Available", "Rented Out", "In Maintenance", "Pending Return"], // availability status
+      enum: ["Available", "Rented Out", "In Maintenance"], // availability status
       default: "Available", // default when car is added
     },
     maintenanceLogs: [maintenanceLogSchema],
