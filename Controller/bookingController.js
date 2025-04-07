@@ -69,12 +69,14 @@ export const bookCar = async (req, res) => {
     console.log("rentEndDate", rentalEndDate);
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-    const CurrentDate= new Date();
-    const CurrentDateString=CurrentDate.toLocaleDateString('en-CA');
-    const userTime = new Date(`${CurrentDateString} ${rentalStartTime}`)
-  if(userTime<CurrentDate){
-    return res.status(400).json({message:"Rental Start time must be in future"});
-  }
+    const CurrentDate = new Date();
+    const CurrentDateString = CurrentDate.toLocaleDateString("en-CA");
+    const userTime = new Date(`${CurrentDateString} ${rentalStartTime}`);
+    if (userTime < CurrentDate) {
+      return res
+        .status(400)
+        .json({ message: "Rental Start time must be in future" });
+    }
     if (rentalStartDateis < now) {
       return res.status(400).json({
         message: "Rental start date must be in the present or future.",
@@ -337,7 +339,9 @@ export const updateBooking = async (req, res) => {
       invoiceType: "Updated Booking Invoice Generated",
     });
 
-    const invoiceUrl = `${req.protocol}://${req.get("host")}/api/bookcar/invoices/invoice_${booking.userId}.pdf`;
+    const invoiceUrl = `${req.protocol}://${req.get(
+      "host"
+    )}/api/bookcar/invoices/invoice_${booking.userId}.pdf`;
     res.status(200).json({
       message: "Booking updated successfully",
       booking,
@@ -455,7 +459,9 @@ export const extendBooking = async (req, res) => {
       invoiceType: "Extend Booking Invoice Generated",
     });
 
-    const invoiceUrl = `${req.protocol}://${req.get("host")}/api/bookcar/invoices/invoice_${booking._id}.pdf`;
+    const invoiceUrl = `${req.protocol}://${req.get(
+      "host"
+    )}/api/bookcar/invoices/invoice_${booking._id}.pdf`;
 
     res.status(200).json({
       message: "Booking extended successfully",
@@ -562,7 +568,7 @@ export const Return_car = async (req, res) => {
     }
     return res
       .status(200)
-      .json({ message: "Return request sent to showroom  owner for approved" });
+      .json({ message: "Return request sent to showroom owner for approval" });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Something went wrong", error });

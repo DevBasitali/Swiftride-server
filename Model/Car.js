@@ -36,8 +36,26 @@ const car_Schema = new mongoose.Schema(
       ref: "Users_data",
       required: true,
     },
+    seatCapacity: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    luggageCapacity: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    fuelType: {
+      type: String,
+      required: true,
+      enum: ["Petrol", "Diesel", "Electric"],
+    },
+    carFeatures: {
+      type: String,
+    },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 const car_Model = mongoose.model("cars", car_Schema);
 export default car_Model;
