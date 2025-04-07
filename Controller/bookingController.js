@@ -128,7 +128,7 @@ export const bookCar = async (req, res) => {
     await newBooking.save();
     // create invoice
     const invoicePath = await generateInvoice({
-      _id: userId,
+      _id:newBooking._id,
       carId,
       userId,
       showroomId,
@@ -138,6 +138,7 @@ export const bookCar = async (req, res) => {
       rentalEndTime: formattedRentalEndTime,
       totalPrice,
       invoiceType: "New Booking Invoice Generated",
+      updateCount: 0
     });
 
     car.availability = "Rented Out";
@@ -321,12 +322,9 @@ export const updateBooking = async (req, res) => {
 
     booking.totalPrice = totalPrice;
 
-    // Save the updated booking
-    await booking.save();
-
     // Generate invoice
     const invoicePath = await generateInvoice({
-      _id: booking.userId,
+      _id: booking._id,
       carId: booking.carId,
       userId: booking.userId,
       rentalStartDate: booking.rentalStartDate,
@@ -335,8 +333,10 @@ export const updateBooking = async (req, res) => {
       rentalEndTime: booking.rentalEndTime,
       totalPrice,
       invoiceType: "Updated Booking Invoice Generated",
+      updateCount: 1
     });
-
+    // Save the updated booking
+    await booking.save();
     const invoiceUrl = `${req.protocol}://${req.get("host")}/api/bookcar/invoices/invoice_${booking.userId}.pdf`;
     res.status(200).json({
       message: "Booking updated successfully",
@@ -349,27 +349,27 @@ export const updateBooking = async (req, res) => {
   }
 };
 // Date format fix (YYYY-MM-DD)
-const formatDate = (dateString) => {
-  if (!dateString) return null;
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return null;
-  return date.toISOString().split("T")[0];
-};
+// const formatDate = (dateString) => {
+//   if (!dateString) return null;
+//   const date = new Date(dateString);
+//   if (isNaN(date.getTime())) return null;
+//   return date.toISOString().split("T")[0];
+// };
 
 // Time format fix (24-hour format)
-const formatTime = (timeString) => {
-  if (!timeString) return null;
-  const [time, modifier] = timeString.split(" ");
-  let [hours, minutes] = time.split(":");
+// const formatTime = (timeString) => {
+//   if (!timeString) return null;
+//   const [time, modifier] = timeString.split(" ");
+//   let [hours, minutes] = time.split(":");
 
-  if (modifier === "PM" && hours !== "12") {
-    hours = parseInt(hours, 10) + 12;
-  }
-  if (modifier === "AM" && hours === "12") {
-    hours = "00";
-  }
-  return `${hours}:${minutes}`;
-};
+//   if (modifier === "PM" && hours !== "12") {
+//     hours = parseInt(hours, 10) + 12;
+//   }
+//   if (modifier === "AM" && hours === "12") {
+//     hours = "00";
+//   }
+//   return `${hours}:${minutes}`;
+// };
 // EXTEND BOOKING
 export const extendBooking = async (req, res) => {
   const { bookingId } = req.params;
@@ -453,6 +453,7 @@ export const extendBooking = async (req, res) => {
       rentalEndTime: booking.rentalEndTime,
       totalPrice,
       invoiceType: "Extend Booking Invoice Generated",
+      updateCount: 2
     });
 
     const invoiceUrl = `${req.protocol}://${req.get("host")}/api/bookcar/invoices/invoice_${booking._id}.pdf`;

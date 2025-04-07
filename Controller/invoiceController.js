@@ -20,14 +20,14 @@ export const generateInvoice = async (bookingDetails) => {
     // Existing PDF load
     const pdfDoc = await PDFLibDocument.load(existingPdfBytes);
     //  New page add 
-    const page = pdfDoc.addPage([700, 500]);
+    const page = pdfDoc.addPage([600, 400]);
     const { height } = page.getSize();
     //  Updated data add k
     page.drawText(`${bookingDetails.invoiceType}`, {
       x: 50,
       y: height - 50,
       size: 20,
-      color: rgb(0, 0, 0)
+      color: rgb(0.29, 0.56, 0.89)
     });
     page.drawText(`Invoice Type: ${bookingDetails.invoiceType}`, { x: 50, y: height - 70, size: 14, color:rgb(1, 1, 1) });
     page.drawText(`Booking ID: ${bookingDetails._id}`, { x: 50, y: 320, size: 15 });
@@ -91,7 +91,7 @@ export const generateInvoice = async (bookingDetails) => {
 
     //  From
     page.drawText('From:', { x: 350, y: height - 150, size: 14 });
-    page.drawText(`${showroom.email}\n${showroom.address}\n${showroom.contactNumber}`, { x: 350, y: height - 170, size: 12 });
+    page.drawText(`${showroom.showroomName}\n ${showroom.email}\n${showroom.address}\n${showroom.contactNumber}`, { x: 350, y: height - 170, size: 12 });
                   
     //  Table Header
     page.drawLine({ start: { x: 50, y: height - 250 }, end: { x: 550, y: height - 250 }, thickness: 1 });
@@ -124,4 +124,3 @@ export const generateInvoice = async (bookingDetails) => {
     console.log(`Invoice saved at: ${invoicePath}`);
   }
 };
-

@@ -97,13 +97,13 @@ export const login = async (req, res) => {
     // Check if the user exists
     const user = await signup.findOne({ email });
     if (!user) {
-      return res.status(400).json("User with this email does not exist");
+      return res.status(400).json({message:"User with this email does not exist"});
     }
 
     // Logic for admin login
     if (user.role === "admin") {
       const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) return res.status(400).json("Invalid email or password");
+      if (!isMatch) return res.status(400).json({message:"Invalid email or password"});
 
       // Generate token for admin
       const token = jwt.sign(
@@ -121,7 +121,7 @@ export const login = async (req, res) => {
 
     // Logic for showroom users
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json("Invalid password");
+    if (!isMatch) return res.status(400).json({message:"Invalid password"});
 
     // Find the showroom status
     let showroomStatus = null;
@@ -182,21 +182,19 @@ export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
     const user = await signup.findOne({ email }); // Ensure you use the correct model
-
     if (!user) return res.status(404).json("User not found test");
 
     // Generate reset token
     const resetToken = crypto.randomBytes(32).toString("hex"); // Generate a random reset token
     user.resetPasswordToken = resetToken; // Store the plain token in the database
     user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // Token expires in 10 minutes
-    await user.save();
 
     // Send reset link via email
-    const resetUrl = `${process.env.SITE_URL}/reset-password/${resetToken}`;
+    const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
     const message = `Please click on the following link to reset your password: ${resetUrl}`;
-
+   console.log(process.env.EMAIL_USER)
     const transporter = nodemailer.createTransport({
-      service: user,
+      service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
@@ -207,7 +205,7 @@ export const forgotPassword = async (req, res) => {
       subject: "Password Reset",
       text: message,
     });
-
+    await user.save();
     res.status(200).json("Email sent");
   } catch (error) {
     res.status(500).json({ message: error.message });
