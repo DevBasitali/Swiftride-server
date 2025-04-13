@@ -149,7 +149,7 @@ export const bookCar = async (req, res) => {
 
     const invoiceUrl = `${req.protocol}://${req.get(
       "host"
-    )}/api/bookcar/invoices/invoice_${userId}.pdf`;
+    )}/api/bookcar/invoices/invoice_${newBooking._id}.pdf`;
 
     res.status(201).json({
       message: "Car booked successfully",
@@ -341,7 +341,7 @@ export const updateBooking = async (req, res) => {
     await booking.save();
     const invoiceUrl = `${req.protocol}://${req.get(
       "host"
-    )}/api/bookcar/invoices/invoice_${booking.userId}.pdf`;
+    )}/api/bookcar/invoices/invoice_${booking._id}.pdf`;
     res.status(200).json({
       message: "Booking updated successfully",
       booking,
