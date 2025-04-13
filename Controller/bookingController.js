@@ -57,7 +57,7 @@ export const bookCar = async (req, res) => {
       ],
     });
 
-    if (overlappingBooking) {
+    if (overlappingBooking && !overlappingBooking.status === "returned") {
       return res
         .status(400)
         .json({ message: "The car is already booked for the selected dates." });
@@ -546,7 +546,10 @@ export const Return_car = async (req, res) => {
     // Update car availability
     car.availability = "Pending Return";
 
-    car.save();
+    booking.status = "return initiated";
+
+    await booking.save();
+    await car.save();
     return res
       .status(200)
       .json({ message: "Return request sent to showroom owner for approval" });

@@ -202,8 +202,8 @@ export const removeCar = async (req, res) => {
     if (!car) {
       return res.status(404).json("Car not found. Please try again.");
     }
-    const booking = await Booking.findById(car._id);
-    if (booking.status !== "returned") {
+    const booking = await Booking.findById(car.rentalInfo);
+    if (booking.status === "returned") {
     } else {
       return res.status(400).json("Car is currently booked. Cannot delete.");
     }
@@ -363,7 +363,6 @@ export const startMaintenance = async (req, res) => {
 
     car.availability = "In Maintenance";
     await car.save();
-    console.log(car.rentalInfo?.userId?._id);
 
     const invoicePath = await generateInvoice({
       _id: car.rentalInfo?._id,
@@ -403,12 +402,10 @@ export const completeMaintenance = async (req, res) => {
         .json("Access denied. Only showroom owners can complete maintenance");
     }
 
-    const car = await car_Model.findById(id);
+    const car = await car_Model.findById(id).populate("rentalInfo");
     if (!car) return res.status(404).json({ message: "Car not found" });
 
-    const booking = await Booking.findOne({
-      carId: id,
-    });
+    const booking = await Booking.findById(car.rentalInfo._id);
 
     booking.status = "returned";
     car.availability = "Available";

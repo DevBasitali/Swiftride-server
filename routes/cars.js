@@ -22,7 +22,7 @@ import { isShowroomApproved } from "../Middleware/verifyShowRoomStauts.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const uploadPath = path.join(__dirname, "../../Rentrush-frontend/public/uploads");
+const uploadPath = path.join(__dirname, "../../RentRush-Front/public/uploads");
 
 if (!fs.existsSync(uploadPath)) {
   console.log("Directory does not exist. Creating directory...");
