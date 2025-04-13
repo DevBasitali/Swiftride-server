@@ -65,8 +65,6 @@ export const bookCar = async (req, res) => {
     // Create Date objects from the input dates
     const rentalStartDateis = new Date(rentalStartDate);
     const rentalEndDateis = new Date(rentalEndDate);
-    console.log("rentStartDate", rentalStartDate);
-    console.log("rentEndDate", rentalEndDate);
     const now = new Date();
     now.setHours(0, 0, 0, 0);
     const CurrentDate = new Date();
@@ -130,7 +128,7 @@ export const bookCar = async (req, res) => {
     await newBooking.save();
     // create invoice
     const invoicePath = await generateInvoice({
-      _id:newBooking._id,
+      _id: newBooking._id,
       carId,
       userId,
       showroomId,
@@ -140,7 +138,7 @@ export const bookCar = async (req, res) => {
       rentalEndTime: formattedRentalEndTime,
       totalPrice,
       invoiceType: "New Booking Invoice Generated",
-      updateCount: 0
+      updateCount: 0,
     });
 
     car.availability = "Rented Out";
@@ -335,11 +333,13 @@ export const updateBooking = async (req, res) => {
       rentalEndTime: booking.rentalEndTime,
       totalPrice,
       invoiceType: "Updated Booking Invoice Generated",
-      updateCount: 1
+      updateCount: 1,
     });
     // Save the updated booking
     await booking.save();
-    const invoiceUrl = `${req.protocol}://${req.get("host")}/api/bookcar/invoices/invoice_${booking.userId}.pdf`;
+    const invoiceUrl = `${req.protocol}://${req.get(
+      "host"
+    )}/api/bookcar/invoices/invoice_${booking.userId}.pdf`;
     res.status(200).json({
       message: "Booking updated successfully",
       booking,
@@ -350,28 +350,6 @@ export const updateBooking = async (req, res) => {
     res.status(500).json({ message: "Error updating booking", error });
   }
 };
-// Date format fix (YYYY-MM-DD)
-// const formatDate = (dateString) => {
-//   if (!dateString) return null;
-//   const date = new Date(dateString);
-//   if (isNaN(date.getTime())) return null;
-//   return date.toISOString().split("T")[0];
-// };
-
-// Time format fix (24-hour format)
-// const formatTime = (timeString) => {
-//   if (!timeString) return null;
-//   const [time, modifier] = timeString.split(" ");
-//   let [hours, minutes] = time.split(":");
-
-//   if (modifier === "PM" && hours !== "12") {
-//     hours = parseInt(hours, 10) + 12;
-//   }
-//   if (modifier === "AM" && hours === "12") {
-//     hours = "00";
-//   }
-//   return `${hours}:${minutes}`;
-// };
 // EXTEND BOOKING
 export const extendBooking = async (req, res) => {
   const { bookingId } = req.params;
@@ -455,7 +433,7 @@ export const extendBooking = async (req, res) => {
       rentalEndTime: booking.rentalEndTime,
       totalPrice,
       invoiceType: "Extend Booking Invoice Generated",
-      updateCount: 2
+      updateCount: 2,
     });
 
     const invoiceUrl = `${req.protocol}://${req.get(
@@ -555,16 +533,20 @@ export const Return_car = async (req, res) => {
     const { BookingId } = req.params;
     console.log("bookingId", BookingId);
     const booking = await Booking.findById(BookingId).populate("carId");
-    console.log("BOOKING", booking);
     if (!booking) {
       return res.status(404).json({ message: "Booking not found" });
     }
-    console.log("booking details", booking);
     const car = await Car.findById(booking.carId._id);
-    console.log("Car", car);
     if (!car) {
       return res.status(404).json({ message: "car not found" });
     }
+    if (car.availability === "Available") {
+      return res.status(400).json({ message: "Car is already available" });
+    }
+    // Update car availability
+    car.availability = "Pending Return";
+
+    car.save();
     return res
       .status(200)
       .json({ message: "Return request sent to showroom owner for approval" });

@@ -1,26 +1,28 @@
-import express from 'express'
- import multer from 'multer'
- import {
-   removeCar,
-   addCar,
-   searchCar,
-   updateCar,
-   getAllCars,
-   updateReturnDetails,
-   completeMaintenance,
-   getCars,
- } from "../Controller/carsController.js";
- import { verifyToken } from "../Middleware/verifyToken.js";
+import express from "express";
+import multer from "multer";
+import {
+  removeCar,
+  addCar,
+  searchCar,
+  updateCar,
+  getAllCars,
+  updateReturnDetails,
+  completeMaintenance,
+  getCars,
+  getAllReturnCars,
+  startMaintenance,
+} from "../Controller/carsController.js";
+import { verifyToken } from "../Middleware/verifyToken.js";
 
- import fs from "fs";
- import path from "path";
- import { fileURLToPath } from "url";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import { isShowroomApproved } from "../Middleware/verifyShowRoomStauts.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const uploadPath = path.join(__dirname, "../../RentRush/public/uploads");
+const uploadPath = path.join(__dirname, "../public/uploads");
 
 if (!fs.existsSync(uploadPath)) {
   console.log("Directory does not exist. Creating directory...");
@@ -64,16 +66,28 @@ router.put(
   updateCar
 );
 router.get("/get-all-cars", verifyToken, isShowroomApproved, getAllCars);
+router.get(
+  "/get-all-return-cars",
+  verifyToken,
+  isShowroomApproved,
+  getAllReturnCars
+);
 router.get("/get-cars", verifyToken, getCars);
 router.delete("/delete/:id", verifyToken, isShowroomApproved, removeCar);
 router.get("/search", searchCar);
 router.post("/return", verifyToken, updateReturnDetails);
 // Route for marking maintenance as complete
 router.post(
-  "/complete-maintenance",
+  "/start-maintenance",
+  verifyToken,
+  isShowroomApproved,
+  startMaintenance
+);
+router.post(
+  "/complete-maintenance/:id",
   verifyToken,
   isShowroomApproved,
   completeMaintenance
 );
 
-export default router
+export default router;

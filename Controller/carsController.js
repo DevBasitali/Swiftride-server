@@ -1,4 +1,6 @@
+import Booking from "../Model/bookingModel.js";
 import car_Model from "../Model/Car.js";
+import { generateInvoice } from "./invoiceController.js";
 export const addCar = async (req, res) => {
   try {
     // console.log(req.body);
@@ -73,6 +75,34 @@ export const getAllCars = async (req, res) => {
         path: "userId",
       },
     });
+    // console.log(cars);
+    return res.status(200).json(cars);
+  } catch (error) {
+    console.error("Error fetching cars:", error);
+    return res
+      .status(500)
+      .json("An internal server error occurred. Please try again later.");
+  }
+};
+
+export const getAllReturnCars = async (req, res) => {
+  try {
+    const userId = req.user;
+    if (!userId) {
+      return res.status(401).json("Unauthorized");
+    }
+    const cars = await car_Model
+      .find({ userId })
+      .populate({
+        path: "rentalInfo",
+        populate: {
+          path: "userId",
+        },
+      })
+      .where({
+        availability: ["Pending Return", "In Maintenance"],
+      });
+
     // console.log(cars);
     return res.status(200).json(cars);
   } catch (error) {
@@ -168,18 +198,21 @@ export const removeCar = async (req, res) => {
         .json("Access denied. Only showroom owners can delete cars.");
     }
     const _id = req.params.id;
-    console.log(_id);
     const car = await car_Model.findById(_id);
     if (!car) {
       return res.status(404).json("Car not found. Please try again.");
     }
-    console.log({ userID: car.userId });
-    console.log({ uid: req.user });
+    const booking = await Booking.findById(car._id);
+    if (booking.status !== "returned") {
+    } else {
+      return res.status(400).json("Car is currently booked. Cannot delete.");
+    }
     if (req.user !== car.userId.toString()) {
       return res
         .status(403)
         .json("Access denied. You can only delete cars you own.");
     }
+
     await car_Model.findByIdAndDelete(_id);
 
     return res.status(200).json("Car has been successfully deleted.");
@@ -280,21 +313,108 @@ export const addMaintenanceLog = async (req, res) => {
 };
 
 // Set car status to "Available" after maintenance
-export const completeMaintenance = async (req, res) => {
-  const { carId } = req.body;
-
+export const startMaintenance = async (req, res) => {
   try {
-    if (req.roel !== "showroom") {
+    const {
+      carId,
+      showroomId,
+      rentalStartDate,
+      rentalStartTime,
+      rentalEndDate,
+      rentalEndTime,
+    } = req.body;
+
+    const car = await car_Model.findById(carId).populate("rentalInfo");
+    if (!car) return res.status(404).json({ message: "Car not found" });
+
+    const rentalStartDateis = new Date(rentalStartDate);
+    const rentalEndDateis = new Date(rentalEndDate);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    // Calculate the rental duration including the last day
+    let rentalDuration =
+      (rentalEndDateis - rentalStartDateis) / (1000 * 60 * 60 * 24);
+    if (rentalDuration === 0) {
+      rentalDuration = 1;
+    }
+    const daysRented = Math.max(0, Math.ceil(rentalDuration));
+    const totalPrice = daysRented * car.rentRate;
+    const formattedRentalStartDate = rentalStartDateis
+      .toISOString()
+      .slice(0, 10); // Sirf date tak format kiya
+    const formattedRentalEndDate = rentalEndDateis.toISOString().slice(0, 10);
+
+    // ✅ Convert rental times to 12-hour format
+    const formatTimeTo12Hour = (time) => {
+      const [hour, minute] = time.split(":").map(Number);
+      const period = hour >= 12 ? "PM" : "AM";
+      const formattedHour = hour % 12 || 12; // Convert hour to 12-hour format
+      return `${formattedHour}:${minute.toString().padStart(2, "0")} ${period}`;
+    };
+
+    const formattedRentalStartTime = formatTimeTo12Hour(rentalStartTime);
+    const formattedRentalEndTime = formatTimeTo12Hour(rentalEndTime);
+    if (req.role !== "showroom") {
       return res
         .status(403)
         .json("Access denied. Only showroom owners can complete maintenance");
     }
 
-    const car = await car_Model.findById(carId);
+    car.availability = "In Maintenance";
+    await car.save();
+    console.log(car.rentalInfo?.userId?._id);
+
+    const invoicePath = await generateInvoice({
+      _id: car.rentalInfo?._id,
+      carId,
+      userId: car.rentalInfo?.userId,
+      showroomId,
+      rentalStartDate: formattedRentalStartDate,
+      rentalEndDate: formattedRentalEndDate,
+      rentalStartTime: formattedRentalStartTime,
+      rentalEndTime: formattedRentalEndTime,
+      totalPrice,
+      invoiceType: "Maintenance Invoice Generated",
+      updateCount: 0,
+    });
+
+    const invoiceUrl = `${req.protocol}://${req.get(
+      "host"
+    )}/api/bookcar/invoices/invoice_${car.rentalInfo?.userId}.pdf`;
+
+    res
+      .status(200)
+      .json({ message: "Car status updated to Maintenance", car, invoiceUrl });
+  } catch (error) {
+    console.error("Error starting maintenance:", error);
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
+// Set car status to "Available" after maintenance
+export const completeMaintenance = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    if (req.role !== "showroom") {
+      return res
+        .status(403)
+        .json("Access denied. Only showroom owners can complete maintenance");
+    }
+
+    const car = await car_Model.findById(id);
     if (!car) return res.status(404).json({ message: "Car not found" });
 
-    car.availability = "Available"; // Set status to available
+    const booking = await Booking.findOne({
+      carId: id,
+    });
+
+    booking.status = "returned";
+    car.availability = "Available";
+
     await car.save();
+    await booking.save();
 
     res.status(200).json({ message: "Car status updated to Available", car });
   } catch (error) {
