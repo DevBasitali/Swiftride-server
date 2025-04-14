@@ -68,7 +68,7 @@ export const bookCar = async (req, res) => {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
     const CurrentDate = new Date();
-    const CurrentDateString = CurrentDate.toLocaleDateString("en-CA");
+    const CurrentDateString = CurrentDate.toLocaleDateString("en-PK");
     const userTime = new Date(`${CurrentDateString} ${rentalStartTime}`);
     if (userTime < CurrentDate) {
       return res

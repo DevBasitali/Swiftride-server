@@ -1,6 +1,7 @@
 import Booking from "../Model/bookingModel.js";
 import car_Model from "../Model/Car.js";
 import { generateInvoice } from "./invoiceController.js";
+
 export const addCar = async (req, res) => {
   try {
     // console.log(req.body);
@@ -126,6 +127,7 @@ export const getCars = async (req, res) => {
       .json("An internal server error occurred. Please try again later.");
   }
 };
+
 export const updateCar = async (req, res) => {
   try {
     const { Id } = req.params;
@@ -318,6 +320,8 @@ export const startMaintenance = async (req, res) => {
     const {
       carId,
       showroomId,
+      maintenanceCost,
+      maintenanceLog,
       rentalStartDate,
       rentalStartTime,
       rentalEndDate,
@@ -362,11 +366,16 @@ export const startMaintenance = async (req, res) => {
     }
 
     car.availability = "In Maintenance";
+    car.maintenanceLogs.push({
+      tasks: maintenanceLog,
+      repairCosts: maintenanceCost,
+    });
     await car.save();
 
     const invoicePath = await generateInvoice({
       _id: car.rentalInfo?._id,
       carId,
+      maintenanceCost,
       userId: car.rentalInfo?.userId,
       showroomId,
       rentalStartDate: formattedRentalStartDate,
@@ -380,7 +389,7 @@ export const startMaintenance = async (req, res) => {
 
     const invoiceUrl = `${req.protocol}://${req.get(
       "host"
-    )}/api/bookcar/invoices/invoice_${car.rentalInfo?.userId}.pdf`;
+    )}/api/bookcar/invoices/${invoicePath.invoiceName}`;
 
     res
       .status(200)

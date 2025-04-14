@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 const maintenanceLogSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now },
-  tasks: [{ type: String, required: true }], // Array of tasks performed
+  tasks: [], // Array of tasks performed
+  repairCosts: [], // Array of repair costs
 });
 
 const car_Schema = new mongoose.Schema(
