@@ -70,7 +70,7 @@ export const bookCar = async (req, res) => {
     const CurrentDate = new Date();
     const CurrentDateString = CurrentDate.toLocaleDateString("en-CA");
     const userTime = new Date(`${CurrentDateString} ${rentalStartTime}`);
-    if (userTime < CurrentDate) {
+    if (userTime > CurrentDate) {
       return res
         .status(400)
         .json({ message: "Rental Start time must be in future" });
