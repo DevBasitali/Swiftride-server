@@ -57,7 +57,7 @@ export const bookCar = async (req, res) => {
       ],
     });
 
-    if (overlappingBooking) {
+    if (overlappingBooking && !overlappingBooking.status === "returned") {
       return res
         .status(400)
         .json({ message: "The car is already booked for the selected dates." });
@@ -65,8 +65,6 @@ export const bookCar = async (req, res) => {
     // Create Date objects from the input dates
     const rentalStartDateis = new Date(rentalStartDate);
     const rentalEndDateis = new Date(rentalEndDate);
-    console.log("rentStartDate", rentalStartDate);
-    console.log("rentEndDate", rentalEndDate);
     const now = new Date();
     now.setHours(0, 0, 0, 0);
     const CurrentDate = new Date();
@@ -149,7 +147,7 @@ export const bookCar = async (req, res) => {
 
     const invoiceUrl = `${req.protocol}://${req.get(
       "host"
-    )}/api/bookcar/invoices/invoice_${userId}.pdf`;
+    )}/api/bookcar/invoices/invoice_${newBooking._id}.pdf`;
 
     res.status(201).json({
       message: "Car booked successfully",
@@ -341,7 +339,7 @@ export const updateBooking = async (req, res) => {
     await booking.save();
     const invoiceUrl = `${req.protocol}://${req.get(
       "host"
-    )}/api/bookcar/invoices/invoice_${booking.userId}.pdf`;
+    )}/api/bookcar/invoices/invoice_${booking._id}.pdf`;
     res.status(200).json({
       message: "Booking updated successfully",
       booking,
@@ -352,28 +350,6 @@ export const updateBooking = async (req, res) => {
     res.status(500).json({ message: "Error updating booking", error });
   }
 };
-// Date format fix (YYYY-MM-DD)
-// const formatDate = (dateString) => {
-//   if (!dateString) return null;
-//   const date = new Date(dateString);
-//   if (isNaN(date.getTime())) return null;
-//   return date.toISOString().split("T")[0];
-// };
-
-// Time format fix (24-hour format)
-// const formatTime = (timeString) => {
-//   if (!timeString) return null;
-//   const [time, modifier] = timeString.split(" ");
-//   let [hours, minutes] = time.split(":");
-
-//   if (modifier === "PM" && hours !== "12") {
-//     hours = parseInt(hours, 10) + 12;
-//   }
-//   if (modifier === "AM" && hours === "12") {
-//     hours = "00";
-//   }
-//   return `${hours}:${minutes}`;
-// };
 // EXTEND BOOKING
 export const extendBooking = async (req, res) => {
   const { bookingId } = req.params;
@@ -570,7 +546,10 @@ export const Return_car = async (req, res) => {
     // Update car availability
     car.availability = "Pending Return";
 
-    car.save();
+    booking.status = "return initiated";
+
+    await booking.save();
+    await car.save();
     return res
       .status(200)
       .json({ message: "Return request sent to showroom owner for approval" });

@@ -1,3 +1,4 @@
+import Booking from "../Model/bookingModel.js";
 import car_Model from "../Model/Car.js";
 import { generateInvoice } from "./invoiceController.js";
 export const addCar = async (req, res) => {
@@ -99,7 +100,7 @@ export const getAllReturnCars = async (req, res) => {
         },
       })
       .where({
-        availability: ["Pending Return" , "In Maintenance"] ,
+        availability: ["Pending Return", "In Maintenance"],
       });
 
     // console.log(cars);
@@ -197,18 +198,21 @@ export const removeCar = async (req, res) => {
         .json("Access denied. Only showroom owners can delete cars.");
     }
     const _id = req.params.id;
-    console.log(_id);
     const car = await car_Model.findById(_id);
     if (!car) {
       return res.status(404).json("Car not found. Please try again.");
     }
-    console.log({ userID: car.userId });
-    console.log({ uid: req.user });
+    const booking = await Booking.findById(car.rentalInfo);
+    if (booking.status === "returned") {
+    } else {
+      return res.status(400).json("Car is currently booked. Cannot delete.");
+    }
     if (req.user !== car.userId.toString()) {
       return res
         .status(403)
         .json("Access denied. You can only delete cars you own.");
     }
+
     await car_Model.findByIdAndDelete(_id);
 
     return res.status(200).json("Car has been successfully deleted.");
@@ -359,7 +363,6 @@ export const startMaintenance = async (req, res) => {
 
     car.availability = "In Maintenance";
     await car.save();
-    console.log(car.rentalInfo?.userId?._id);
 
     const invoicePath = await generateInvoice({
       _id: car.rentalInfo?._id,
@@ -375,7 +378,13 @@ export const startMaintenance = async (req, res) => {
       updateCount: 0,
     });
 
-    res.status(200).json({ message: "Car status updated to Available", car });
+    const invoiceUrl = `${req.protocol}://${req.get(
+      "host"
+    )}/api/bookcar/invoices/invoice_${car.rentalInfo?.userId}.pdf`;
+
+    res
+      .status(200)
+      .json({ message: "Car status updated to Maintenance", car, invoiceUrl });
   } catch (error) {
     console.error("Error starting maintenance:", error);
     res.status(500).json({ message: "Server error", error });
@@ -384,7 +393,7 @@ export const startMaintenance = async (req, res) => {
 
 // Set car status to "Available" after maintenance
 export const completeMaintenance = async (req, res) => {
-  const { carId } = req.body;
+  const { id } = req.params;
 
   try {
     if (req.role !== "showroom") {
@@ -393,11 +402,16 @@ export const completeMaintenance = async (req, res) => {
         .json("Access denied. Only showroom owners can complete maintenance");
     }
 
-    const car = await car_Model.findById(carId);
+    const car = await car_Model.findById(id).populate("rentalInfo");
     if (!car) return res.status(404).json({ message: "Car not found" });
 
-    car.availability = "Available"; // Set status to available
+    const booking = await Booking.findById(car.rentalInfo._id);
+
+    booking.status = "returned";
+    car.availability = "Available";
+
     await car.save();
+    await booking.save();
 
     res.status(200).json({ message: "Car status updated to Available", car });
   } catch (error) {
