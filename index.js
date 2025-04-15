@@ -39,4 +39,6 @@ app.use('/api', user)
 app.use('/api/admin', admin)
 app.use('/api/car', car);
 app.use('/api/bookcar', Booking);
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
 
