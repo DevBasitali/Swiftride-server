@@ -4,7 +4,7 @@ export const showAllShowRooms = async (req, res) => {
   try {
     const showRooms = await signup.find(
       { role: "showroom" },
-      "showroomName address"
+      "showroomName address",
     );
 
     res.status(200).json({

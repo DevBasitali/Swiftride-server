@@ -174,7 +174,7 @@ export const updateCar = async (req, res) => {
         fuelType,
         carFeatures,
       },
-      { new: true, runValidators: true } // Options to return the updated document and run validations
+      { new: true, runValidators: true }, // Options to return the updated document and run validations
     );
 
     if (!updatedCar) {
@@ -276,7 +276,7 @@ export const updateReturnDetails = async (req, res) => {
     const car = await car_Model.findByIdAndUpdate(
       carId,
       { mileage, fuelLevel },
-      { new: true, runValidators: true, context: "query" } // update only specified fields
+      { new: true, runValidators: true, context: "query" }, // update only specified fields
     );
     if (!car) {
       return res.status(404).json({ message: "Car not found" });
@@ -388,7 +388,7 @@ export const startMaintenance = async (req, res) => {
     });
 
     const invoiceUrl = `${req.protocol}://${req.get(
-      "host"
+      "host",
     )}/api/bookcar/invoices/${invoicePath.invoiceName}`;
 
     res

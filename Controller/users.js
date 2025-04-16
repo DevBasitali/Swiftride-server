@@ -113,7 +113,7 @@ export const login = async (req, res) => {
         process.env.SECRET_KEY,
         {
           expiresIn: "10h",
-        }
+        },
       );
       res.cookie("auth_token", token);
       return res
@@ -155,7 +155,7 @@ export const login = async (req, res) => {
       process.env.SECRET_KEY,
       {
         expiresIn: "10h",
-      }
+      },
     );
 
     // Send the token and relevant info
@@ -333,7 +333,7 @@ export const Getinvoice = async (req, res) => {
     console.log("Files in invoices directory:", files);
 
     const matchingFiles = files.filter((file) =>
-      bookingIds.some((bookingId) => file.includes(bookingId))
+      bookingIds.some((bookingId) => file.includes(bookingId)),
     );
     console.log("Matching Files:", matchingFiles);
 

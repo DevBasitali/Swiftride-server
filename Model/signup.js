@@ -1,6 +1,5 @@
-
 import mongoose from "mongoose";
-const schema=mongoose.Schema;
+const schema = mongoose.Schema;
 // const userSignup =new schema(
 //     {
 //         name:{
@@ -42,8 +41,6 @@ const schema=mongoose.Schema;
 // // module.exports=Signup;
 // export default UserSignup;
 
-
-
 // const mongoose = require('mongoose');
 
 const Signup = new mongoose.Schema(
@@ -64,9 +61,9 @@ const Signup = new mongoose.Schema(
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-const signup = mongoose.model('Users_data', Signup);
+const signup = mongoose.model("Users_data", Signup);
 signup.createIndexes();
 export default signup;

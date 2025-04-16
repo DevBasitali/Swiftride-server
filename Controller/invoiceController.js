@@ -16,11 +16,8 @@ export const generateInvoice = async (bookingDetails) => {
   const car = bookingDetails.carId
     ? await Car.findById(bookingDetails.carId)
     : null;
-  const invoiceName = `invoice_${bookingDetails._id}_${Date.now()}.pdf`
-  const invoicePath = path.join(
-    invoicesDir,
-    invoiceName
-  );
+  const invoiceName = `invoice_${bookingDetails._id}_${Date.now()}.pdf`;
+  const invoicePath = path.join(invoicesDir, invoiceName);
 
   const pdfDoc = await PDFLibDocument.create();
   const page = pdfDoc.addPage([600, 500]);
@@ -47,7 +44,7 @@ export const generateInvoice = async (bookingDetails) => {
     50,
     y,
     14,
-    rgb(1, 1, 1)
+    rgb(1, 1, 1),
   );
   drawText(`Invoice #: ${bookingDetails._id}`, 400, height - 40, 12);
   drawText(`Date: ${moment().format("MMM Do YYYY")}`, 400, height - 60, 12);
@@ -60,7 +57,7 @@ export const generateInvoice = async (bookingDetails) => {
       user?.contactNumber || ""
     }`,
     50,
-    y - 20
+    y - 20,
   );
   drawText("From:", 350, y, 14);
   drawText(
@@ -68,7 +65,7 @@ export const generateInvoice = async (bookingDetails) => {
       showroom?.address || ""
     }\n${showroom?.contactNumber || ""}`,
     350,
-    y - 20
+    y - 20,
   );
 
   y -= 110;
@@ -94,7 +91,7 @@ export const generateInvoice = async (bookingDetails) => {
     drawText(
       moment(bookingDetails.rentalStartDate).format("YYYY-MM-DD"),
       180,
-      y
+      y,
     );
     drawText(moment(bookingDetails.rentalEndDate).format("YYYY-MM-DD"), 300, y);
     drawText(`${car.rentRate.toFixed(0)} Rs`, 410, y);
@@ -138,5 +135,5 @@ export const generateInvoice = async (bookingDetails) => {
   fs.writeFileSync(invoicePath, pdfBytes);
   console.log("Invoice created successfully at:", invoicePath);
 
-  return {invoicePath, invoiceName};
+  return { invoicePath, invoiceName };
 };

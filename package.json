@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node api.js",
-    "dev": "nodemon api/index.js"
+    "dev": "nodemon api/index.js",
+    "format": "prettier --write \"**/*.{js,jsx}\" \"test/**/*.{js,jsx}\""
   },
   "keywords": [],
   "author": "",
@@ -27,6 +28,7 @@
     "nodemon": "^3.1.9",
     "pdf-lib": "^1.17.1",
     "pdfkit": "^0.15.0",
+    "prettier": "^3.5.3",
     "socket.io": "^4.8.1"
   }
 }

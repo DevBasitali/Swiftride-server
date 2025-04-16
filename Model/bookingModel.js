@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const bookingSchema = new mongoose.Schema(
   {
-    userId:{
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Users_data",
       required: true,
@@ -37,11 +37,13 @@ const bookingSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
-  status:{
-  type:String, enum: ["pending", "return initiated", "approved","returned"], default:"pending"  
-  }
+    status: {
+      type: String,
+      enum: ["pending", "return initiated", "approved", "returned"],
+      default: "pending",
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Booking = mongoose.model("Booking", bookingSchema);

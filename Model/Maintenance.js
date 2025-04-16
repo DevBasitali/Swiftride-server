@@ -55,7 +55,7 @@ const car_Schema = new mongoose.Schema(
       type: String,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 const car_Model = mongoose.model("cars", car_Schema);
 export default car_Model;

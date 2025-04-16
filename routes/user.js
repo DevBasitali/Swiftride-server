@@ -50,7 +50,7 @@ router.post(
     body("cnic").isLength({ min: 15, max: 15 }),
     body("contactNumber").isLength({ min: 12, max: 12 }),
   ],
-  Signup
+  Signup,
 );
 
 router.post("/login", [body("email").isEmail()], login);

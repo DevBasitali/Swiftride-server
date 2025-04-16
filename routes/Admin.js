@@ -1,7 +1,12 @@
-import express from "express"
-const router=express.Router()
+import express from "express";
+const router = express.Router();
 import loginAdmin from "../Controller/Adminlogin.js";
-import {Adminview,BanShowroom,Show_BanShow_Room,Active_Show_Room} from '../Controller/Adminview.js'
+import {
+  Adminview,
+  BanShowroom,
+  Show_BanShow_Room,
+  Active_Show_Room,
+} from "../Controller/Adminview.js";
 import {
   approveShowroom,
   getPendingShowrooms,
