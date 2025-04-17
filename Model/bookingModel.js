@@ -46,6 +46,11 @@ const bookingSchema = new mongoose.Schema(
       type: Object,
       default: {},
     },
+    invoiceUrls: [],
+    currentInvoiceUrl: {
+      type: String,
+      default: "",
+    },
   },
   { timestamps: true }
 );

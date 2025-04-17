@@ -373,15 +373,6 @@ export const startMaintenance = async (req, res) => {
 
     booking.repairDescriptions = repairDescriptions;
 
-    car.availability = "In Maintenance";
-    car.maintenanceLogs.push({
-      bookingId: car.rentalInfo._id,
-      tasks: maintenanceLog,
-      repairCosts: maintenanceCost,
-      repairDescriptions: repairDescriptions,
-    });
-    await car.save();
-
     const invoicePath = await generateInvoice({
       _id: car.rentalInfo?._id,
       carId,
@@ -400,6 +391,17 @@ export const startMaintenance = async (req, res) => {
     const invoiceUrl = `${req.protocol}://${req.get(
       "host"
     )}/api/bookcar/invoices/${invoicePath.invoiceName}`;
+    booking.invoiceUrls.push(invoiceUrl);
+    booking.currentInvoiceUrl = invoiceUrl;
+    car.availability = "In Maintenance";
+    car.maintenanceLogs.push({
+      bookingId: car.rentalInfo._id,
+      tasks: maintenanceLog,
+      repairCosts: maintenanceCost,
+      repairDescriptions: repairDescriptions,
+    });
+    await booking.save();
+    await car.save();
 
     res
       .status(200)
