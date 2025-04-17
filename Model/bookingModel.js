@@ -42,8 +42,12 @@ const bookingSchema = new mongoose.Schema(
       enum: ["pending", "return initiated", "approved", "returned"],
       default: "pending",
     },
+    repairDescriptions: {
+      type: Object,
+      default: {},
+    },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 const Booking = mongoose.model("Booking", bookingSchema);

@@ -1,8 +1,13 @@
 import mongoose from "mongoose";
 const maintenanceLogSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now },
+  bookingId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Booking",
+  },
   tasks: [], // Array of tasks performed
   repairCosts: [], // Array of repair costs
+  repairDescriptions: [], // Array of repair costs
 });
 
 const car_Schema = new mongoose.Schema(
