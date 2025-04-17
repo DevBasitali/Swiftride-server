@@ -174,7 +174,7 @@ export const updateCar = async (req, res) => {
         fuelType,
         carFeatures,
       },
-      { new: true, runValidators: true }, // Options to return the updated document and run validations
+      { new: true, runValidators: true } // Options to return the updated document and run validations
     );
 
     if (!updatedCar) {
@@ -276,7 +276,7 @@ export const updateReturnDetails = async (req, res) => {
     const car = await car_Model.findByIdAndUpdate(
       carId,
       { mileage, fuelLevel },
-      { new: true, runValidators: true, context: "query" }, // update only specified fields
+      { new: true, runValidators: true, context: "query" } // update only specified fields
     );
     if (!car) {
       return res.status(404).json({ message: "Car not found" });
@@ -322,6 +322,7 @@ export const startMaintenance = async (req, res) => {
       showroomId,
       maintenanceCost,
       maintenanceLog,
+      repairDescriptions,
       rentalStartDate,
       rentalStartTime,
       rentalEndDate,
@@ -365,10 +366,19 @@ export const startMaintenance = async (req, res) => {
         .json("Access denied. Only showroom owners can complete maintenance");
     }
 
+    const booking = await Booking.findById(car.rentalInfo._id);
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    booking.repairDescriptions = repairDescriptions;
+
     car.availability = "In Maintenance";
     car.maintenanceLogs.push({
+      bookingId: car.rentalInfo._id,
       tasks: maintenanceLog,
       repairCosts: maintenanceCost,
+      repairDescriptions: repairDescriptions,
     });
     await car.save();
 
@@ -388,7 +398,7 @@ export const startMaintenance = async (req, res) => {
     });
 
     const invoiceUrl = `${req.protocol}://${req.get(
-      "host",
+      "host"
     )}/api/bookcar/invoices/${invoicePath.invoiceName}`;
 
     res
