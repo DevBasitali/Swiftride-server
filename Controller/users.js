@@ -34,7 +34,8 @@ export const Signup = async (req, res) => {
     console.log(req.body.showroomName);
 
     let user = await signup.findOne({ email });
-
+    let existingCNIC =await signup.findOne({cnic});
+    let existingPhone =await signup.findOne({contactNumber});
     if (showroomName) {
       const response = await signup.findOne({ showroomName }); // Check for existing showroom
       if (response) {
@@ -43,6 +44,12 @@ export const Signup = async (req, res) => {
     }
     if (user) {
       return res.status(400).json("User already exists"); // If user exists, return this message
+    }
+    if (existingCNIC) {
+      return res.status(400).json( 'CNIC already registered with another account.');
+    }
+    if (existingPhone) {
+      return res.status(400).json( 'Phonenum already registered with another account.');
     }
 
     // Hash the password
@@ -316,7 +323,7 @@ export const Getinvoice = async (req, res) => {
   try {
     const userId = req.user;
     console.log("Middleware User ID:", userId);
-    const bookings = await Booking.find({ userId });
+    const bookings = await Booking.find({ userId }).populate('carId');
     console.log("Bookings:", bookings);
 
     if (!bookings.length) {
@@ -344,10 +351,17 @@ export const Getinvoice = async (req, res) => {
     }
 
     // Create array of invoice objects with URLs
-    const invoices = matchingFiles.map((file) => ({
-      bookingId: bookingIds.find((id) => file.includes(id)),
-      invoiceUrl: `http://localhost:${process.env.PORT}/invoices/${file}`,
-    }));
+    const invoices = matchingFiles.map((file) => {
+      const bookingId = bookingIds.find((id) => file.includes(id));
+      const booking = bookings.find((b) => b._id.toString() === bookingId);
+      return {
+        bookingId,
+        invoiceUrl: `http://localhost:${process.env.PORT}/invoices/${file}`,
+        balance: booking?.totalPrice, 
+       carName: booking?.carId?.carBrand || "Unknown Car",
+      };
+    });
+    console.log("invoices",invoices)
     res.status(200).json({
       success: true,
       data: invoices,
