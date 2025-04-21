@@ -1,4 +1,4 @@
-import Status_Model from "../Model/showroomstatus.js";
+import Status_Model from "../Model/showroomStatus.js";
 
 export const isShowroomApproved = async (req, res, next) => {
   try {

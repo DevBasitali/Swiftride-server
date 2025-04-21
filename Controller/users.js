@@ -186,7 +186,7 @@ export const login = async (req, res) => {
 
 // logout controller
 export const logout = async (req, res) => {
-  res.clearCookie("token", { httpOnly: true, sameSite: "strict" });
+  res.clearCookie("auth_token", { httpOnly: true, sameSite: "strict" });
   res.status(200).json({ message: "Logout sucessfully" });
 };
 // Forgot Password Logic

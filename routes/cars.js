@@ -24,7 +24,7 @@ const __dirname = path.dirname(__filename);
 
 const uploadPath = path.join(
   __dirname,
-  "../../RentRush-Frontend/public/uploads",
+  "../../RentRush/public/uploads",
 );
 
 if (!fs.existsSync(uploadPath)) {
