@@ -1,5 +1,7 @@
+import nodemailer from "nodemailer";
 import Booking from "../Model/bookingModel.js";
 import car_Model from "../Model/Car.js";
+import signup from "../Model/signup.js";
 import { generateInvoice } from "./invoiceController.js";
 
 export const addCar = async (req, res) => {
@@ -347,19 +349,20 @@ export const startMaintenance = async (req, res) => {
     const totalPrice = daysRented * car.rentRate;
     const formattedRentalStartDate = rentalStartDateis
       .toISOString()
-      .slice(0, 10); // Sirf date tak format kiya
+      .slice(0, 10);
     const formattedRentalEndDate = rentalEndDateis.toISOString().slice(0, 10);
 
-    // ✅ Convert rental times to 12-hour format
+    // Convert rental times to 12-hour format
     const formatTimeTo12Hour = (time) => {
       const [hour, minute] = time.split(":").map(Number);
       const period = hour >= 12 ? "PM" : "AM";
-      const formattedHour = hour % 12 || 12; // Convert hour to 12-hour format
+      const formattedHour = hour % 12 || 12;
       return `${formattedHour}:${minute.toString().padStart(2, "0")} ${period}`;
     };
 
     const formattedRentalStartTime = formatTimeTo12Hour(rentalStartTime);
     const formattedRentalEndTime = formatTimeTo12Hour(rentalEndTime);
+
     if (req.role !== "showroom") {
       return res
         .status(403)
@@ -403,6 +406,42 @@ export const startMaintenance = async (req, res) => {
     await booking.save();
     await car.save();
 
+    // Fetch user details for email
+    const user = await signup.findById(car.rentalInfo?.userId);
+    if (!user) {
+      console.error("User not found for email notification");
+    } else {
+      try {
+        // Configure Nodemailer transporter
+        const transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+          },
+        });
+
+        // Email options
+        const mailOptions = {
+          from: process.env.EMAIL_USER,
+          to: user?.email,
+          subject: "Car Maintenance Started - Invoice",
+          text: `Dear ${user?.name},\n\nYour car (${car.carBrand} ${car.carModel} ${car.year}) has entered maintenance. Please find the invoice attached.\n\nDetails:\n- Start Date: ${formattedRentalStartDate} \n- End Date: ${formattedRentalEndDate} \n- Total Cost: $${totalPrice}\n\nThank you for choosing our service!\n\nBest regards,\nShowroom Team`,
+          attachments: [
+            {
+              filename: invoicePath.invoiceName,
+              path: invoiceUrl,
+              contentType: "application/pdf",
+            },
+          ],
+        };
+
+        // Send email
+        const mail = await transporter.sendMail(mailOptions);
+      } catch (error) {
+        console.error("Error sending email:", error);
+      }
+    }
     res
       .status(200)
       .json({ message: "Car status updated to Maintenance", car, invoiceUrl });
