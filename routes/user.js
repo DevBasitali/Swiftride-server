@@ -21,7 +21,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const uploadPath = path.join(__dirname, "../public/uploads");
+const uploadPath = path.join(__dirname, "../../Rentrush-frontend/public/uploads");
 if (!fs.existsSync(uploadPath)) {
   console.log("Directory does not exist. Creating directory...");
   fs.mkdirSync(uploadPath, { recursive: true });
