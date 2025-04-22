@@ -68,17 +68,22 @@ export const BanShowroom = async (req, res) => {
     const showroom = await signup.findById(showroomid);
     // console.log(showroom)
     const exist_ban = await Status_Model.findOne({
-      showroomId: showroom._id,
-      status: "baned",
+      showroomId: showroomid,
+      status: "banned",
     });
-    //  console.log(exist_ban)
     if (exist_ban) {
-      return res.status(404).json({ msg: "This showroom is already banned" });
+      if (exist_ban?.status === "banned") {
+        exist_ban.status = "active";
+        await exist_ban.save();
+        return res.status(200).json({ msg: "Showroom unbanned successfully" });
+      }
+
+      if (exist_ban?.status === "active") {
+        exist_ban.status = "banned";
+        await exist_ban.save();
+        return res.status(200).json({ msg: "Showroom banned successfully" });
+      }
     }
-    await Status_Model.create({
-      showroomId: showroom._id,
-      status: "baned",
-    });
     return res.status(200).json({ msg: "Showroom banned successfully" });
   } catch (error) {
     return res
@@ -111,7 +116,7 @@ export const Active_Show_Room = async (req, res) => {
 export const getPendingShowrooms = async (req, res) => {
   try {
     const pendingShowrooms = await Status_Model.find({ approved: 0 }).populate(
-      "showroomId",
+      "showroomId"
     );
     res.json(pendingShowrooms);
   } catch (error) {

@@ -147,7 +147,7 @@ export const login = async (req, res) => {
         return res.status(200).json("Showroom status not found.");
       }
 
-      if (showroomStatus.status === "baned") {
+      if (showroomStatus.status === "banned") {
         return res.status(200).json("Your showroom is banned.");
       }
 

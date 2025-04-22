@@ -6,7 +6,11 @@ const Status = new mongoose.Schema({
     ref: "Users_data",
     required: true,
   },
-  status: { type: String, enum: ["active", "baned"], default: "unactive" },
+  status: {
+    type: String,
+    enum: ["active", "banned", "inactive"],
+    default: "inactive",
+  },
   approved: { type: Number, enum: [0, 1], default: 0 },
 });
 if (mongoose.models.Showroomstatuses) {
