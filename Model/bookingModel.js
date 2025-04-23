@@ -52,7 +52,7 @@ const bookingSchema = new mongoose.Schema(
       default: "",
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Booking = mongoose.model("Booking", bookingSchema);

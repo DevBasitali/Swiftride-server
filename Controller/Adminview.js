@@ -116,7 +116,7 @@ export const Active_Show_Room = async (req, res) => {
 export const getPendingShowrooms = async (req, res) => {
   try {
     const pendingShowrooms = await Status_Model.find({ approved: 0 }).populate(
-      "showroomId"
+      "showroomId",
     );
     res.json(pendingShowrooms);
   } catch (error) {

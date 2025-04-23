@@ -22,10 +22,7 @@ import { isShowroomApproved } from "../Middleware/verifyShowRoomStauts.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const uploadPath = path.join(
-  __dirname,
-  "../public/uploads"
-);
+const uploadPath = path.join(__dirname, "../public/uploads");
 
 if (!fs.existsSync(uploadPath)) {
   console.log("Directory does not exist. Creating directory...");
@@ -59,21 +56,21 @@ router.post(
   upload.array("images", 3),
   verifyToken,
   isShowroomApproved,
-  addCar
+  addCar,
 );
 router.put(
   "/update/:Id",
   upload.array("images", 3),
   verifyToken,
   isShowroomApproved,
-  updateCar
+  updateCar,
 );
 router.get("/get-all-cars", verifyToken, isShowroomApproved, getAllCars);
 router.get(
   "/get-all-return-cars",
   verifyToken,
   isShowroomApproved,
-  getAllReturnCars
+  getAllReturnCars,
 );
 router.get("/get-cars", verifyToken, getCars);
 router.delete("/delete/:id", verifyToken, isShowroomApproved, removeCar);
@@ -84,13 +81,13 @@ router.post(
   "/start-maintenance",
   verifyToken,
   isShowroomApproved,
-  startMaintenance
+  startMaintenance,
 );
 router.post(
   "/complete-maintenance/:id",
   verifyToken,
   isShowroomApproved,
-  completeMaintenance
+  completeMaintenance,
 );
 
 export default router;
