@@ -1,5 +1,5 @@
-import signup from "../Model/signup.js";
 import Status_Model from "../Model/showroomStatus.js";
+import signup from "../Model/signup.js";
 export const Adminview = async (req, res) => {
   const Admin_view = await signup.aggregate([
     {
@@ -69,32 +69,34 @@ export const BanShowroom = async (req, res) => {
     // console.log(showroom)
     const exist_ban = await Status_Model.findOne({
       showroomId: showroomid,
-      status: "banned",
     });
     if (exist_ban) {
       if (exist_ban?.status === "banned") {
         exist_ban.status = "active";
         await exist_ban.save();
-        return res.status(200).json({ msg: "Showroom unbanned successfully" });
+        return res.status(200).json({ msg: "Activated successfully" });
       }
 
       if (exist_ban?.status === "active") {
         exist_ban.status = "banned";
         await exist_ban.save();
-        return res.status(200).json({ msg: "Showroom banned successfully" });
+        return res.status(200).json({ msg: "Banned successfully" });
       }
+    } else {
+      const newStatus = new Status_Model({
+        showroomId: showroomid,
+        status: "banned",
+      });
+      await newStatus.save();
     }
-    return res.status(200).json({ msg: "Showroom banned successfully" });
+    return res.status(200).json({ msg: "Banned successfully" });
   } catch (error) {
-    return res
-      .status(500)
-      .json({ msg: "Error banning showroom", error: error.message });
+    return res.status(500).json({ msg: "Error banning", error: error.message });
   }
 };
 export const Show_BanShow_Room = async (req, res) => {
   try {
     const Ban_Data = await Status_Model.find().populate("showroomId");
-    console.log(Ban_Data);
     if (!Ban_Data || Ban_Data.length === 0) {
       return res.status(404).json({ message: "No Ban Showroom" });
     }
@@ -116,7 +118,7 @@ export const Active_Show_Room = async (req, res) => {
 export const getPendingShowrooms = async (req, res) => {
   try {
     const pendingShowrooms = await Status_Model.find({ approved: 0 }).populate(
-      "showroomId",
+      "showroomId"
     );
     res.json(pendingShowrooms);
   } catch (error) {

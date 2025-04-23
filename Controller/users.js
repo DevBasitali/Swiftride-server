@@ -124,7 +124,7 @@ export const login = async (req, res) => {
         process.env.SECRET_KEY,
         {
           expiresIn: "10h",
-        },
+        }
       );
       res.cookie("auth_token", token);
       return res
@@ -137,25 +137,47 @@ export const login = async (req, res) => {
     if (!isMatch) return res.status(400).json({ message: "Invalid password" });
 
     // Find the showroom status
-    let showroomStatus = null;
+    let banStatus = null;
     if (user.role === "showroom") {
-      showroomStatus = await Status_Model.findOne({ showroomId: user._id });
+      banStatus = await Status_Model.findOne({ showroomId: user._id });
     }
     let name;
-    if (user.role === "client") name = user.ownerName;
+    if (user.role === "client") {
+      name = user.ownerName;
+      banStatus = await Status_Model.findOne({ showroomId: user._id });
+      if (banStatus.status === "banned") {
+        return res.status(200).json({
+          message: "Your are banned.",
+          role: user.role,
+          showroomName: user.showroomName,
+          logo: user.images[0],
+          approved: banStatus ? banStatus.approved : null,
+          status: banStatus ? banStatus.status : null,
+          name,
+        });
+      }
+    }
 
     // If the showroom status is not found or it's banned, deny access
     if (user.role === "showroom") {
       name = user.showroomName;
-      if (!showroomStatus) {
+      if (!banStatus) {
         return res.status(200).json("Showroom status not found.");
       }
 
-      if (showroomStatus.status === "banned") {
-        return res.status(200).json("Your showroom is banned.");
+      if (banStatus.status === "banned") {
+        return res.status(200).json({
+          message: "Your showroom is banned.",
+          role: user.role,
+          showroomName: user.showroomName,
+          logo: user.images[0],
+          approved: banStatus ? banStatus.approved : null,
+          status: banStatus ? banStatus.status : null,
+          name,
+        });
       }
 
-      if (showroomStatus.approved !== 1) {
+      if (banStatus.approved !== 1) {
         return res.status(200).json("Your showroom is awaiting approval.");
       }
     }
@@ -166,7 +188,7 @@ export const login = async (req, res) => {
       process.env.SECRET_KEY,
       {
         expiresIn: "10h",
-      },
+      }
     );
 
     // Send the token and relevant info
@@ -177,8 +199,8 @@ export const login = async (req, res) => {
       role: user.role,
       showroomName: user.showroomName,
       logo: user.images[0],
-      approved: showroomStatus ? showroomStatus.approved : null,
-      status: showroomStatus ? showroomStatus.status : null,
+      approved: banStatus ? banStatus.approved : null,
+      status: banStatus ? banStatus.status : null,
       name,
       token,
     });
@@ -344,7 +366,7 @@ export const Getinvoice = async (req, res) => {
     console.log("Files in invoices directory:", files);
 
     const matchingFiles = files.filter((file) =>
-      bookingIds.some((bookingId) => file.includes(bookingId)),
+      bookingIds.some((bookingId) => file.includes(bookingId))
     );
     console.log("Matching Files:", matchingFiles);
 
