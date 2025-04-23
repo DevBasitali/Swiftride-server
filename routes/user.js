@@ -19,9 +19,11 @@ const router = express.Router();
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const uploadPath = path.join(__dirname, "../public/uploads");
+
 if (!fs.existsSync(uploadPath)) {
   console.log("Directory does not exist. Creating directory...");
   fs.mkdirSync(uploadPath, { recursive: true });
@@ -50,7 +52,7 @@ router.post(
     body("cnic").isLength({ min: 15, max: 15 }),
     body("contactNumber").isLength({ min: 12, max: 12 }),
   ],
-  Signup,
+  Signup
 );
 
 router.post("/login", [body("email").isEmail()], login);

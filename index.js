@@ -26,8 +26,6 @@ app.use(cookieParser());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Static folder serve karne ke liye
-app.use("/invoices", express.static(path.join(__dirname, "invoices")));
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -42,3 +40,4 @@ app.use("/api/admin", admin);
 app.use("/api/car", car);
 app.use("/api/bookcar", Booking);
 app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
+app.use("/invoices", express.static(path.join(__dirname, "invoices")));
