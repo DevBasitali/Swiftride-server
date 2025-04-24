@@ -146,7 +146,7 @@ export const bookCar = async (req, res) => {
     await car.save();
 
     const invoiceUrl = `${req.protocol}://${req.get(
-      "host",
+      "host"
     )}/api/bookcar/invoices/invoice_${newBooking._id}.pdf`;
 
     res.status(201).json({
@@ -258,7 +258,7 @@ export const updateBooking = async (req, res) => {
     // Calculate the current time and the rental start time
     const currentTime = new Date();
     const rentalStartDateTime = new Date(
-      `${rentalStartDate} ${rentalStartTime}`,
+      `${rentalStartDate} ${rentalStartTime}`
     );
 
     // Restrict updates if the rental start date is less than the current date
@@ -284,10 +284,10 @@ export const updateBooking = async (req, res) => {
 
     // Recalculate the rental start and end times
     const updatedRentalStartDateTime = new Date(
-      `${booking.rentalStartDate} ${booking.rentalStartTime}`,
+      `${booking.rentalStartDate} ${booking.rentalStartTime}`
     );
     const updatedRentalEndDateTime = new Date(
-      `${booking.rentalEndDate} ${booking.rentalEndTime}`,
+      `${booking.rentalEndDate} ${booking.rentalEndTime}`
     );
 
     // Validate the updated rental times
@@ -344,7 +344,7 @@ export const updateBooking = async (req, res) => {
     // Save the updated booking
     await booking.save();
     const invoiceUrl = `${req.protocol}://${req.get(
-      "host",
+      "host"
     )}/api/bookcar/invoices/invoice_${booking._id}.pdf`;
     res.status(200).json({
       message: "Booking updated successfully",
@@ -383,7 +383,7 @@ export const extendBooking = async (req, res) => {
     if (rentalEndDate && rentalEndTime) {
       //  Ensure time is in 12-hour format with AM/PM
       const updatedRentalEndDateTime = new Date(
-        `${rentalEndDate} ${rentalEndTime}`,
+        `${rentalEndDate} ${rentalEndTime}`
       );
 
       if (isNaN(updatedRentalEndDateTime.getTime())) {
@@ -407,7 +407,7 @@ export const extendBooking = async (req, res) => {
           hour: "2-digit",
           minute: "2-digit",
           hour12: true,
-        },
+        }
       );
     }
 
@@ -443,7 +443,7 @@ export const extendBooking = async (req, res) => {
     });
 
     const invoiceUrl = `${req.protocol}://${req.get(
-      "host",
+      "host"
     )}/api/bookcar/invoices/invoice_${booking._id}.pdf`;
 
     res.status(200).json({

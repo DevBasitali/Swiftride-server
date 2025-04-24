@@ -3,6 +3,7 @@ import Booking from "../Model/bookingModel.js";
 import car_Model from "../Model/Car.js";
 import signup from "../Model/signup.js";
 import { generateInvoice } from "./invoiceController.js";
+import { generateInvoiceEmailTemplate } from "../invoiceEmailTemplate.js";
 
 export const addCar = async (req, res) => {
   try {
@@ -339,7 +340,6 @@ export const startMaintenance = async (req, res) => {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
 
-    // Calculate the rental duration including the last day
     let rentalDuration =
       (rentalEndDateis - rentalStartDateis) / (1000 * 60 * 60 * 24);
     if (rentalDuration === 0) {
@@ -352,7 +352,6 @@ export const startMaintenance = async (req, res) => {
       .slice(0, 10);
     const formattedRentalEndDate = rentalEndDateis.toISOString().slice(0, 10);
 
-    // Convert rental times to 12-hour format
     const formatTimeTo12Hour = (time) => {
       const [hour, minute] = time.split(":").map(Number);
       const period = hour >= 12 ? "PM" : "AM";
@@ -394,6 +393,7 @@ export const startMaintenance = async (req, res) => {
     const invoiceUrl = `${req.protocol}://${req.get(
       "host"
     )}/api/bookcar/invoices/${invoicePath.invoiceName}`;
+
     booking.invoiceUrls.push(invoiceUrl);
     booking.currentInvoiceUrl = invoiceUrl;
     car.availability = "In Maintenance";
@@ -403,45 +403,51 @@ export const startMaintenance = async (req, res) => {
       repairCosts: maintenanceCost,
       repairDescriptions: repairDescriptions,
     });
+
+    const showroom = await signup.findById(showroomId);
+    const user = await signup.findById(car.rentalInfo?.userId);
+    if (user) {
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      // Beautiful HTML email template
+      const emailTemplate = generateInvoiceEmailTemplate(
+        user,
+        car,
+        maintenanceCost,
+        showroom,
+        formattedRentalStartDate,
+        formattedRentalEndDate,
+        totalPrice
+      );
+
+      // Email options
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to: "imtahiranjum@gmail.com",
+        subject: "Car Maintenance Started - Invoice",
+        html: emailTemplate, // Use HTML template
+        text: `Dear ${user.name || "Customer"},\n\nYour car (${car.carBrand} ${car.carModel} ${car.year}) has entered maintenance. Please find the invoice attached.\n\nDetails:\n- Start Date: ${formattedRentalStartDate}\n- End Date: ${formattedRentalEndDate}\n- Total Cost: $${totalPrice.toFixed(2)}\n\nThank you for choosing our service!\n\nBest regards,\nShowroom Team`, // Fallback text
+        attachments: [
+          {
+            filename: invoicePath.invoiceName,
+            path: invoiceUrl, // Use server file path, not URL
+            contentType: "application/pdf",
+          },
+        ],
+      };
+
+      await transporter.sendMail(mailOptions);
+    }
+
     await booking.save();
     await car.save();
 
-    // Fetch user details for email
-    const user = await signup.findById(car.rentalInfo?.userId);
-    if (!user) {
-      console.error("User not found for email notification");
-    } else {
-      try {
-        // Configure Nodemailer transporter
-        const transporter = nodemailer.createTransport({
-          service: "gmail",
-          auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-          },
-        });
-
-        // Email options
-        const mailOptions = {
-          from: process.env.EMAIL_USER,
-          to: user?.email,
-          subject: "Car Maintenance Started - Invoice",
-          text: `Dear ${user?.name},\n\nYour car (${car.carBrand} ${car.carModel} ${car.year}) has entered maintenance. Please find the invoice attached.\n\nDetails:\n- Start Date: ${formattedRentalStartDate} \n- End Date: ${formattedRentalEndDate} \n- Total Cost: $${totalPrice}\n\nThank you for choosing our service!\n\nBest regards,\nShowroom Team`,
-          attachments: [
-            {
-              filename: invoicePath.invoiceName,
-              path: invoiceUrl,
-              contentType: "application/pdf",
-            },
-          ],
-        };
-
-        // Send email
-        const mail = await transporter.sendMail(mailOptions);
-      } catch (error) {
-        console.error("Error sending email:", error);
-      }
-    }
     res
       .status(200)
       .json({ message: "Car status updated to Maintenance", car, invoiceUrl });
