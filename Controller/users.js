@@ -152,8 +152,7 @@ export const login = async (req, res) => {
     if (user.role === "client") {
       name = user.ownerName;
       banStatus = await Status_Model.findOne({ showroomId: user._id });
-      if (!banStatus) {
-      } else if (banStatus?.status === "banned") {
+      if (banStatus?.status === "banned") {
         return res.status(200).json({
           message: "Your are banned.",
           role: user.role,
