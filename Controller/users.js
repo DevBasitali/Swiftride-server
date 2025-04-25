@@ -88,6 +88,13 @@ export const Signup = async (req, res) => {
 
     // Respond based on the user role
     if (role === "client") {
+      const showroomStatus = new Status_Model({
+        showroomId: user._id,
+        status: "active",
+        approved: 1,
+      });
+      await showroomStatus.save();
+
       return res.status(201).json("User registered successfully");
     }
     if (role === "showroom") {
@@ -145,7 +152,8 @@ export const login = async (req, res) => {
     if (user.role === "client") {
       name = user.ownerName;
       banStatus = await Status_Model.findOne({ showroomId: user._id });
-      if (banStatus.status === "banned") {
+      if (!banStatus) {
+      } else if (banStatus?.status === "banned") {
         return res.status(200).json({
           message: "Your are banned.",
           role: user.role,
