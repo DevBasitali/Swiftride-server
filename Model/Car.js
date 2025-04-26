@@ -17,6 +17,7 @@ const car_Schema = new mongoose.Schema(
     color: { type: String, required: true },
     carModel: { type: String, required: true },
     year: { type: Number, required: true },
+    yearOfManufacture: { type: Number, required: false },
     images: [{ type: String }],
     engineType: { type: String, required: true },
     bodyType: { type: String, required: true, enum: ["Sedan", "SUV"] },

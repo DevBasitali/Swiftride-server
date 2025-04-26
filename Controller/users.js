@@ -351,59 +351,75 @@ export const test = (req, res) => {
   });
 };
 
-// get all invoice for view
 export const Getinvoice = async (req, res) => {
   try {
     const userId = req.user;
     console.log("Middleware User ID:", userId);
-    const bookings = await Booking.find({ userId }).populate("carId");
-    console.log("Bookings:", bookings);
+
+    // Get latest booking for each car
+    const bookings = await Booking.aggregate([
+      {
+        $lookup: {
+          from: "cars",
+          localField: "carId",
+          foreignField: "_id",
+          as: "carId"
+        }
+      },
+      { $unwind: "$carId" },
+      { $sort: { createdAt: -1 } },
+      {
+        $group: {
+          _id: "$carId._id",
+          latestBooking: { $first: "$$ROOT" }
+        }
+      },
+      {
+        $replaceRoot: { newRoot: "$latestBooking" }
+      }
+    ]);
 
     if (!bookings.length) {
-      return res
-        .status(404)
-        .json({ message: "No bookings found for this user" });
+      return res.status(404).json({ message: "No bookings found for this user" });
     }
 
     const bookingIds = bookings.map((booking) => booking._id.toString());
-    console.log("Booking IDs:", bookingIds);
 
     const invoicesDir = path.join(process.cwd(), "invoices");
     const files = await fsPromises.readdir(invoicesDir);
-    console.log("Files in invoices directory:", files);
 
-    const matchingFiles = files.filter((file) =>
-      bookingIds.some((bookingId) => file.includes(bookingId))
-    );
-    console.log("Matching Files:", matchingFiles);
+    const invoices = [];
 
-    if (matchingFiles.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No invoices found for your bookings" });
+    // For each booking (one per car), find the matching invoice file
+    for (const booking of bookings) {
+      const bookingId = booking._id.toString();
+      const matchingFile = files.find((file) => file.includes(bookingId));
+
+      if (matchingFile) {
+        invoices.push({
+          bookingId,
+          invoiceUrl: `http://localhost:${process.env.PORT}/invoices/${matchingFile}`,
+          balance: booking?.totalPrice,
+          carName: booking?.carId?.carBrand || "Unknown Car",
+        });
+      }
     }
 
-    // Create array of invoice objects with URLs
-    const invoices = matchingFiles.map((file) => {
-      const bookingId = bookingIds.find((id) => file.includes(id));
-      const booking = bookings.find((b) => b._id.toString() === bookingId);
-      return {
-        bookingId,
-        invoiceUrl: `http://localhost:${process.env.PORT}/invoices/${file}`,
-        balance: booking?.totalPrice,
-        carName: booking?.carId?.carBrand || "Unknown Car",
-      };
-    });
-    console.log("invoices", invoices);
+    if (invoices.length === 0) {
+      return res.status(404).json({ message: "No invoices found for your bookings" });
+    }
+
     res.status(200).json({
       success: true,
       data: invoices,
     });
+
   } catch (error) {
     console.error("Error fetching invoices:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 //  getcarsall for specific showroom
 export const getshowroomcar = async (req, res) => {

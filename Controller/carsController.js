@@ -1,9 +1,9 @@
 import nodemailer from "nodemailer";
+import { generateInvoiceEmailTemplate } from "../invoiceEmailTemplate.js";
 import Booking from "../Model/bookingModel.js";
 import car_Model from "../Model/Car.js";
 import signup from "../Model/signup.js";
 import { generateInvoice } from "./invoiceController.js";
-import { generateInvoiceEmailTemplate } from "../invoiceEmailTemplate.js";
 
 export const addCar = async (req, res) => {
   try {
@@ -13,6 +13,7 @@ export const addCar = async (req, res) => {
       rentRate,
       carModel,
       year,
+      yearOfManufacture,
       make,
       engineType,
       images,
@@ -40,6 +41,7 @@ export const addCar = async (req, res) => {
       rentRate,
       carModel,
       year,
+      yearOfManufacture,
       make,
       engineType,
       images,
@@ -139,6 +141,7 @@ export const updateCar = async (req, res) => {
       rentRate,
       carModel,
       year,
+      yearOfManufacture,
       make,
       engineType,
       images,
@@ -157,6 +160,18 @@ export const updateCar = async (req, res) => {
         .status(403)
         .json("Unauthorized action. Only showroom owners can update cars.");
     }
+
+    const booking = await Booking.find({
+      carId: Id,
+      status: {
+        $ne: "returned",
+      },
+    });
+
+    if (booking?.length > 0) {
+      return res.status(400).json("Car is currently booked. Cannot update.");
+    }
+
     //   update a car function
     const updatedCar = await car_Model.findByIdAndUpdate(
       Id,
@@ -165,6 +180,7 @@ export const updateCar = async (req, res) => {
         rentRate,
         carModel,
         year,
+        yearOfManufacture,
         make,
         engineType,
         images,
@@ -429,7 +445,7 @@ export const startMaintenance = async (req, res) => {
       // Email options
       const mailOptions = {
         from: process.env.EMAIL_USER,
-        to: "imtahiranjum@gmail.com",
+        to: user.email,
         subject: "Car Maintenance Started - Invoice",
         html: emailTemplate, // Use HTML template
         text: `Dear ${user.name || "Customer"},\n\nYour car (${car.carBrand} ${car.carModel} ${car.year}) has entered maintenance. Please find the invoice attached.\n\nDetails:\n- Start Date: ${formattedRentalStartDate}\n- End Date: ${formattedRentalEndDate}\n- Total Cost: $${totalPrice.toFixed(2)}\n\nThank you for choosing our service!\n\nBest regards,\nShowroom Team`, // Fallback text
@@ -444,7 +460,6 @@ export const startMaintenance = async (req, res) => {
 
       await transporter.sendMail(mailOptions);
     }
-
     await booking.save();
     await car.save();
 
@@ -481,6 +496,8 @@ export const completeMaintenance = async (req, res) => {
 
     res.status(200).json({ message: "Car status updated to Available", car });
   } catch (error) {
+    console.log(error);
+
     res.status(500).json({ message: "Server error", error });
   }
 };
