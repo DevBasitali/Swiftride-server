@@ -22,6 +22,7 @@ const car_Schema = new mongoose.Schema(
     engineType: { type: String, required: true },
     bodyType: { type: String, required: true, enum: ["Sedan", "SUV"] },
     mileage: { type: String, required: true },
+    variant: { type: String, required: false },
     transmission: {
       type: String,
       required: true,
