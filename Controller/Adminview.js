@@ -37,6 +37,14 @@ export const Adminview = async (req, res) => {
             else: "$$REMOVE",
           },
         },
+        isApproved: {
+          $cond: {
+            if: { $eq: ["$role", "showroom"] },
+            then: { $ifNull: ["$status.approved", 0] },
+            else: "$$REMOVE",
+          },
+        },
+        createdAt: 1,
       },
     },
   ]);
@@ -131,7 +139,10 @@ export const approveShowroom = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const status = await Status_Model.findById(id);
+    const status = await Status_Model.findOne({
+      showroomId: id,
+      approved: 0,
+    }).populate("showroomId");
     if (!status || status.approved === 1) {
       return res
         .status(404)
@@ -144,6 +155,7 @@ export const approveShowroom = async (req, res) => {
 
     res.json({ message: "Showroom approved successfully" });
   } catch (error) {
+    console.error("Error approving showroom:", error);
     res.status(500).json({ error: "Error approving showroom" });
   }
 };
