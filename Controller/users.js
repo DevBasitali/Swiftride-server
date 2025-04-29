@@ -390,8 +390,6 @@ export const Getinvoice = async (req, res) => {
         .json({ message: "No bookings found for this user" });
     }
 
-    const bookingIds = bookings.map((booking) => booking._id.toString());
-
     const invoicesDir = path.join(process.cwd(), "invoices");
     const files = await fsPromises.readdir(invoicesDir);
 
@@ -405,9 +403,11 @@ export const Getinvoice = async (req, res) => {
       if (matchingFile) {
         invoices.push({
           bookingId,
+          isCompleted: booking?.status === "returned",
           invoiceUrl: `http://localhost:${process.env.PORT}/invoices/${matchingFile}`,
           balance: booking?.totalPrice,
           carName: booking?.carId?.carBrand || "Unknown Car",
+          createdAt: booking?.createdAt,
         });
       }
     }
