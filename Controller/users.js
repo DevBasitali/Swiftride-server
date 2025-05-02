@@ -93,7 +93,7 @@ export const Signup = async (req, res) => {
         });
         const mailOptions = {
           from: process.env.EMAIL_USER,
-          to: "imtahiranjum@gmail.com",
+          to: admin.email,
           subject: "New Showroom Registration Approval Request",
           html: generateShowroomApprovalEmailTemplate(
             admin,
