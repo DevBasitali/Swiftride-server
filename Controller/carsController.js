@@ -4,6 +4,7 @@ import Booking from "../Model/bookingModel.js";
 import car_Model from "../Model/Car.js";
 import signup from "../Model/signup.js";
 import { generateInvoice } from "./invoiceController.js";
+import mongoose from "mongoose";
 
 export const addCar = async (req, res) => {
   try {
@@ -92,6 +93,72 @@ export const getAllCars = async (req, res) => {
       .json("An internal server error occurred. Please try again later.");
   }
 };
+
+export const getAllPaymentCars = async (req, res) => {
+  try {
+    const userId = req.user;
+    if (!userId) {
+      return res.status(401).json("Unauthorized");
+    }
+    const cars = await car_Model
+      .find({ userId })
+      .populate({
+        path: "rentalInfo",
+        match: { status: "pending payment" },
+        populate: {
+          path: "userId",
+        },
+      })
+      .where("rentalInfo")
+      .ne(null); // Ensure only cars with valid rentalInfo are returned
+
+    return res.status(200).json(cars);
+  } catch (error) {
+    console.error("Error fetching pending payment cars:", error);
+    return res
+      .status(500)
+      .json("An internal server error occurred. Please try again later.");
+  }
+};
+
+// export const getAllPaymentCars = async (req, res) => {
+//   try {
+//     const userId = req.user;
+//     if (!userId) {
+//       return res.status(401).json("Unauthorized");
+//     }
+//     const cars = await car_Model.aggregate([
+//       { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+//       {
+//         $lookup: {
+//           from: "Booking",
+//           localField: "rentalInfo",
+//           foreignField: "_id",
+//           as: "rentalInfo",
+//         },
+//       },
+//       { $unwind: "$rentalInfo" },
+//       { $match: { "rentalInfo.status": "pending payment" } },
+//       {
+//         $lookup: {
+//           from: "Users_data",
+//           localField: "rentalInfo.userId",
+//           foreignField: "_id",
+//           as: "rentalInfo.user",
+//         },
+//       },
+//       { $unwind: "$rentalInfo.user" },
+//     ]);
+
+//     // console.log(cars);
+//     return res.status(200).json(cars);
+//   } catch (error) {
+//     console.error("Error fetching cars:", error);
+//     return res
+//       .status(500)
+//       .json("An internal server error occurred. Please try again later.");
+//   }
+// };
 
 export const getAllReturnCars = async (req, res) => {
   try {
@@ -492,7 +559,7 @@ export const completeMaintenance = async (req, res) => {
 
     const booking = await Booking.findById(car.rentalInfo._id);
 
-    booking.status = "returned";
+    booking.status = "pending payment";
     car.availability = "Available";
 
     await car.save();
@@ -502,6 +569,37 @@ export const completeMaintenance = async (req, res) => {
   } catch (error) {
     console.log(error);
 
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
+export const markPaymentReceived = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    if (req.role !== "showroom") {
+      return res
+        .status(403)
+        .json(
+          "Access denied. Only showroom owners can mark payment as received"
+        );
+    }
+
+    const car = await car_Model.findById(id).populate("rentalInfo");
+    if (!car) return res.status(404).json({ message: "Car not found" });
+
+    const booking = await Booking.findById(car.rentalInfo._id);
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
+
+    booking.status = "returned";
+    car.availability = "Available";
+
+    await car.save();
+    await booking.save();
+
+    res.status(200).json({ message: "Payment marked as received", car });
+  } catch (error) {
+    console.log(error);
     res.status(500).json({ message: "Server error", error });
   }
 };

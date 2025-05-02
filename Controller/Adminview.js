@@ -137,11 +137,11 @@ export const getPendingShowrooms = async (req, res) => {
 // Approve showroom
 export const approveShowroom = async (req, res) => {
   const { id } = req.params;
+  const { approved } = req.body;
 
   try {
     const status = await Status_Model.findOne({
       showroomId: id,
-      approved: 0,
     }).populate("showroomId");
     if (!status || status.approved === 1) {
       return res
@@ -150,10 +150,15 @@ export const approveShowroom = async (req, res) => {
     }
 
     // Approve showroom
-    status.approved = 1;
-    await status.save();
-
-    res.json({ message: "Showroom approved successfully" });
+    if (approved) {
+      status.approved = 1;
+      await status.save();
+      res.json({ message: "Showroom approved!" });
+    } else {
+      status.approved = 0;
+      await status.save();
+      res.json({ message: "Showroom approval rejected!" });
+    }
   } catch (error) {
     console.error("Error approving showroom:", error);
     res.status(500).json({ error: "Error approving showroom" });

@@ -1,16 +1,18 @@
 import express from "express";
 import multer from "multer";
 import {
-  removeCar,
   addCar,
-  searchCar,
-  updateCar,
-  getAllCars,
-  updateReturnDetails,
   completeMaintenance,
-  getCars,
+  getAllCars,
+  getAllPaymentCars,
   getAllReturnCars,
+  getCars,
+  markPaymentReceived,
+  removeCar,
+  searchCar,
   startMaintenance,
+  updateCar,
+  updateReturnDetails,
 } from "../Controller/carsController.js";
 import { verifyToken } from "../Middleware/verifyToken.js";
 
@@ -56,21 +58,27 @@ router.post(
   upload.array("images", 3),
   verifyToken,
   isShowroomApproved,
-  addCar,
+  addCar
 );
 router.put(
   "/update/:Id",
   upload.array("images", 3),
   verifyToken,
   isShowroomApproved,
-  updateCar,
+  updateCar
 );
 router.get("/get-all-cars", verifyToken, isShowroomApproved, getAllCars);
 router.get(
   "/get-all-return-cars",
   verifyToken,
   isShowroomApproved,
-  getAllReturnCars,
+  getAllReturnCars
+);
+router.get(
+  "/get-all-payment-cars",
+  verifyToken,
+  isShowroomApproved,
+  getAllPaymentCars
 );
 router.get("/get-cars", verifyToken, getCars);
 router.delete("/delete/:id", verifyToken, isShowroomApproved, removeCar);
@@ -81,13 +89,20 @@ router.post(
   "/start-maintenance",
   verifyToken,
   isShowroomApproved,
-  startMaintenance,
+  startMaintenance
 );
 router.post(
   "/complete-maintenance/:id",
   verifyToken,
   isShowroomApproved,
-  completeMaintenance,
+  completeMaintenance
+);
+
+router.post(
+  "/mark-payment-received/:id",
+  verifyToken,
+  isShowroomApproved,
+  markPaymentReceived
 );
 
 export default router;

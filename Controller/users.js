@@ -9,6 +9,7 @@ import Booking from "../Model/bookingModel.js";
 import car_Model from "../Model/Car.js";
 import Status_Model from "../Model/showroomStatus.js";
 import signup from "../Model/signup.js";
+import { generateShowroomApprovalEmailTemplate } from "../showroomRegisterEmailTemplate.js";
 
 export const Signup = async (req, res) => {
   try {
@@ -72,8 +73,6 @@ export const Signup = async (req, res) => {
       role,
     });
 
-    console.log(hashedPassword);
-
     await user.save();
     if (role === "showroom") {
       const showroomStatus = new Status_Model({
@@ -82,6 +81,33 @@ export const Signup = async (req, res) => {
         approved: 0, // Set the showroom as pending approval
       });
 
+      // Send email to admin for approval
+      const admin = await signup.findOne({ role: "admin" });
+      if (admin) {
+        const transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+          },
+        });
+        const mailOptions = {
+          from: process.env.EMAIL_USER,
+          to: "imtahiranjum@gmail.com",
+          subject: "New Showroom Registration Approval Request",
+          html: generateShowroomApprovalEmailTemplate(
+            admin,
+            user,
+            new Date().toLocaleDateString(),
+            {
+              ownerName,
+              email,
+              contactNumber,
+            }
+          ),
+        };
+        await transporter.sendMail(mailOptions);
+      }
       // Save the showroom status
       await showroomStatus.save();
     }

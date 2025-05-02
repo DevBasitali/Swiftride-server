@@ -39,7 +39,7 @@ const bookingSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "return initiated", "approved", "returned"],
+      enum: ["pending", "return initiated", "approved", "returned", "pending payment"],
       default: "pending",
     },
     repairDescriptions: {
