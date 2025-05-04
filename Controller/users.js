@@ -10,6 +10,7 @@ import car_Model from "../Model/Car.js";
 import Status_Model from "../Model/showroomStatus.js";
 import signup from "../Model/signup.js";
 import { generateShowroomApprovalEmailTemplate } from "../showroomRegisterEmailTemplate.js";
+import mongoose from "mongoose";
 
 export const Signup = async (req, res) => {
   try {
@@ -382,13 +383,22 @@ export const test = (req, res) => {
   });
 };
 
-export const Getinvoice = async (req, res) => {
+export const getInvoicesForShowroom = async (req, res) => {
   try {
-    const userId = req.user;
-    console.log("Middleware User ID:", userId);
+    const userId = new mongoose.Types.ObjectId(req?.user);
 
     // Get latest booking for each car
     const bookings = await Booking.aggregate([
+      { $match: { showroomId: userId } },
+      {
+        $lookup: {
+          from: "users_datas",
+          localField: "userId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: "$user" },
       {
         $lookup: {
           from: "cars",
@@ -399,6 +409,7 @@ export const Getinvoice = async (req, res) => {
       },
       { $unwind: "$carId" },
       { $sort: { createdAt: -1 } },
+
       {
         $group: {
           _id: "$carId._id",
@@ -430,6 +441,90 @@ export const Getinvoice = async (req, res) => {
         invoices.push({
           bookingId,
           isCompleted: booking?.status === "returned",
+          user: booking?.user,
+          invoiceUrl: `http://localhost:${process.env.PORT}/invoices/${matchingFile}`,
+          balance: booking?.totalPrice,
+          carName: booking?.carId?.carBrand || "Unknown Car",
+          createdAt: booking?.createdAt,
+        });
+      }
+    }
+
+    if (invoices.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No invoices found for your bookings" });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: invoices,
+    });
+  } catch (error) {
+    console.error("Error fetching invoices:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const Getinvoice = async (req, res) => {
+  try {
+    const userId = new mongoose.Types.ObjectId(req?.user);
+
+    // Get latest booking for each car
+    const bookings = await Booking.aggregate([
+      { $match: { userId: userId } },
+      {
+        $lookup: {
+          from: "users_datas",
+          localField: "userId",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: "$user" },
+      {
+        $lookup: {
+          from: "cars",
+          localField: "carId",
+          foreignField: "_id",
+          as: "carId",
+        },
+      },
+      { $unwind: "$carId" },
+      { $sort: { createdAt: -1 } },
+      {
+        $group: {
+          _id: "$carId._id",
+          latestBooking: { $first: "$$ROOT" },
+        },
+      },
+      {
+        $replaceRoot: { newRoot: "$latestBooking" },
+      },
+    ]);
+    console.log("bookings", bookings);
+
+    if (!bookings.length) {
+      return res
+        .status(404)
+        .json({ message: "No bookings found for this user" });
+    }
+
+    const invoicesDir = path.join(process.cwd(), "invoices");
+    const files = await fsPromises.readdir(invoicesDir);
+
+    const invoices = [];
+
+    // For each booking (one per car), find the matching invoice file
+    for (const booking of bookings) {
+      const bookingId = booking._id.toString();
+      const matchingFile = files.find((file) => file.includes(bookingId));
+
+      if (matchingFile) {
+        invoices.push({
+          bookingId,
+          isCompleted: booking?.status === "returned",
+          user: booking?.user,
           invoiceUrl: `http://localhost:${process.env.PORT}/invoices/${matchingFile}`,
           balance: booking?.totalPrice,
           carName: booking?.carId?.carBrand || "Unknown Car",

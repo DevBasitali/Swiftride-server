@@ -11,6 +11,7 @@ import {
   GetUser,
   Getinvoice,
   getshowroomcar,
+  getInvoicesForShowroom,
 } from "../Controller/users.js";
 import { showAllShowRooms } from "../Controller/showRoom.js";
 import { verifyToken } from "../Middleware/verifyToken.js";
@@ -52,7 +53,7 @@ router.post(
     body("cnic").isLength({ min: 15, max: 15 }),
     body("contactNumber").isLength({ min: 12, max: 12 }),
   ],
-  Signup,
+  Signup
 );
 
 router.post("/login", [body("email").isEmail()], login);
@@ -62,6 +63,7 @@ router.post("/logout", verifyToken, logout);
 router.put("/updateprofile", verifyToken, UpdateProfile);
 router.get("/getuser", verifyToken, GetUser);
 router.get("/getinvoice", verifyToken, Getinvoice);
+router.get("/get-showroom-invoice", verifyToken, getInvoicesForShowroom);
 //   this is just for testing purpose
 router.get("/test", verifyToken, test);
 router.get("/showrooms", showAllShowRooms);

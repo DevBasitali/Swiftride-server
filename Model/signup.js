@@ -1,47 +1,4 @@
 import mongoose from "mongoose";
-const schema = mongoose.Schema;
-// const userSignup =new schema(
-//     {
-//         name:{
-//             type:String,
-//             required:true
-//         },
-//         email:{
-//             type:String,
-//             required:true,
-//             unique:true
-//         },
-//         cnic:{
-//             type:Number,
-//             required:true
-//         },
-//         contactNumber:{
-//             type:Number,
-//             required:true,
-
-//         },
-//         address:{
-//             type:String,
-//             required:true
-//         },
-//         password:{
-//             type:String,
-//             required:true
-//         },
-//         role:{
-//             type:String,
-//             required:true,
-//             default:'user'
-//         }
-
-//     },{timestamps:true}
-// );
-// const UserSignup=mongoose.model('userSignup',userSignup);
-// UserSignup.createIndexes();
-// // module.exports=Signup;
-// export default UserSignup;
-
-// const mongoose = require('mongoose');
 
 const Signup = new mongoose.Schema(
   {

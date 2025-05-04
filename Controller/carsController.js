@@ -560,7 +560,7 @@ export const completeMaintenance = async (req, res) => {
     const booking = await Booking.findById(car.rentalInfo._id);
 
     booking.status = "pending payment";
-    car.availability = "Available";
+    car.availability = "Pending Payment";
 
     await car.save();
     await booking.save();
