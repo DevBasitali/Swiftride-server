@@ -69,8 +69,6 @@ export const bookCar = async (req, res) => {
     now.setHours(0, 0, 0, 0);
     const CurrentDate = new Date();
     const userDate = new Date(`${rentalStartDate}`);
-    console.log("Current Date:", CurrentDate);
-    console.log("User Time:", userDate);
     
     if (userDate < CurrentDate) {
       return res
