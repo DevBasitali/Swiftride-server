@@ -57,7 +57,7 @@ export const generateInvoiceEmailTemplate = (
       <div class="container">
         <div class="header">
           <h1 style="font-size: 24px; margin: 0; color: #ffffff ">${showroom.showroomName || "Showroom"}</h1>
-          <h1 style="color: #ffffff">Car Maintenance Started</h1>
+          <h1 style="color: #ffffff">Car Maintenance Invoice</h1>
         </div>
         <div class="content">
           <p>Dear ${user.ownerName || "Customer"},</p>
