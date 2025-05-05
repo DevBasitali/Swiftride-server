@@ -4,7 +4,7 @@ import {
   updateBooking,
   cancelBooking,
   getUserBookings,
-  Return_car,
+  returnCar,
   extendBooking,
   GetBookingDetail,
 } from "../Controller/bookingController.js";
@@ -23,7 +23,7 @@ router.put("/update/:bookingId", verifyToken, updateBooking);
 router.delete("/cancel/:bookingId", verifyToken, cancelBooking);
 router.get("/my-bookings", verifyToken, getUserBookings);
 router.patch("/extend-booking/:bookingId", verifyToken, extendBooking);
-router.post("/returncar/:BookingId", verifyToken, Return_car);
+router.post("/returncar/:BookingId", verifyToken, returnCar);
 router.get("/bookcar-detail/:bookingId", verifyToken, GetBookingDetail);
 router.get("/invoices/:filename", (req, res) => {
   const filePath = path.join(__dirname, "../invoices", req.params.filename);

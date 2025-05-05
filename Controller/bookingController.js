@@ -1,6 +1,7 @@
 import Booking from "../Model/bookingModel.js";
 import Car from "../Model/Car.js";
 import { generateInvoice } from "./invoiceController.js";
+import moment from "moment";
 
 // BOOKED car controller
 export const bookCar = async (req, res) => {
@@ -69,7 +70,7 @@ export const bookCar = async (req, res) => {
     now.setHours(0, 0, 0, 0);
     const CurrentDate = new Date();
     const userDate = new Date(`${rentalStartDate}`);
-    
+
     if (userDate < CurrentDate) {
       return res
         .status(400)
@@ -145,10 +146,9 @@ export const bookCar = async (req, res) => {
     car.rentalInfo = newBooking._id;
     await car.save();
 
-    const invoiceUrl = `${req.protocol}://${req.get(
-      "host"
-    )}/api/bookcar/invoices/invoice_${newBooking._id}.pdf`;
-
+    const invoiceUrl = `http://localhost:3000/invoices/${invoicePath.invoiceName}`;
+    
+    
     res.status(201).json({
       message: "Car booked successfully",
       booking: newBooking,
@@ -342,10 +342,12 @@ export const updateBooking = async (req, res) => {
       updateCount: 1,
     });
     // Save the updated booking
+    const invoiceUrl = `http://localhost:3000/invoices/${invoicePath.invoiceName}`;
+
+    booking.currentInvoiceUrl = invoiceUrl;
+    booking.invoiceUrls.push(invoiceUrl);
+
     await booking.save();
-    const invoiceUrl = `${req.protocol}://${req.get(
-      "host"
-    )}/api/bookcar/invoices/invoice_${booking._id}.pdf`;
     res.status(200).json({
       message: "Booking updated successfully",
       booking,
@@ -442,9 +444,11 @@ export const extendBooking = async (req, res) => {
       updateCount: 2,
     });
 
-    const invoiceUrl = `${req.protocol}://${req.get(
-      "host"
-    )}/api/bookcar/invoices/invoice_${booking._id}.pdf`;
+    const invoiceUrl = `http://localhost:3000/invoices/${invoicePath.invoiceName}`;
+
+    booking.currentInvoiceUrl = invoiceUrl;
+    booking.invoiceUrls.push(invoiceUrl);
+    await booking.save();
 
     res.status(200).json({
       message: "Booking extended successfully",
@@ -534,31 +538,80 @@ export const cancelBooking = async (req, res) => {
 };
 
 // RETURN A CAR
-export const Return_car = async (req, res) => {
+export const returnCar = async (req, res) => {
   try {
     const { BookingId } = req.params;
     console.log("bookingId", BookingId);
+
+    // Populate carId
     const booking = await Booking.findById(BookingId).populate("carId");
     if (!booking) {
       return res.status(404).json({ message: "Booking not found" });
     }
+
     const car = await Car.findById(booking.carId._id);
     if (!car) {
-      return res.status(404).json({ message: "car not found" });
+      return res.status(404).json({ message: "Car not found" });
     }
+
     if (car.availability === "Available") {
       return res.status(400).json({ message: "Car is already available" });
     }
+
+    // Calculate overdue time and charges
+    const rentalEndDateTime = moment(
+      `${booking.rentalEndDate} ${booking.rentalEndTime}`,
+      "YYYY-MM-DD h:mm A"
+    ).toDate();
+    if (isNaN(rentalEndDateTime)) {
+      return res
+        .status(400)
+        .json({ message: "Invalid rental end date or time" });
+    }
+
+    console.log("Rental End DateTime:", rentalEndDateTime);
+
+    // Use a realistic return time after rentalEndDateTime for testing
+    const currentDateTime = moment().toDate(); // Replace with actual return time
+    if (isNaN(currentDateTime)) {
+      return res.status(400).json({ message: "Invalid current date or time" });
+    }
+
+    console.log("Current DateTime:", currentDateTime);
+
+    const diffInMs = currentDateTime - rentalEndDateTime;
+    const diffInHours = diffInMs / (1000 * 60 * 60); // Convert ms to hours
+
+    let overdueHours = 0;
+    let overdueCharge = 0;
+
+    if (diffInHours > 2) {
+      // After 2-hour grace period, calculate overdue hours
+      overdueHours = Math.ceil(diffInHours - 2); // Round up to the next hour
+      overdueCharge = overdueHours * 500; // 500 per overdue hour
+    } else if (diffInHours < 0) {
+      // Handle case where return is before rental end
+      return res
+        .status(400)
+        .json({ message: "Car cannot be returned before rental end time" });
+    }
+
     // Update car availability
     car.availability = "Pending Return";
-
     booking.status = "return initiated";
+
+    // Store overdue details in the booking
+    booking.overdueHours = overdueHours;
+    booking.overdueCharge = overdueCharge;
 
     await booking.save();
     await car.save();
-    return res
-      .status(200)
-      .json({ message: "Return request sent to showroom owner for approval" });
+
+    return res.status(200).json({
+      message: "Return request sent to showroom owner for approval",
+      overdueHours,
+      overdueCharge,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Something went wrong", error });

@@ -473,13 +473,13 @@ export const startMaintenance = async (req, res) => {
       rentalStartTime: formattedRentalStartTime,
       rentalEndTime: formattedRentalEndTime,
       totalPrice,
-      invoiceType: "Maintenance Invoice Generated",
+      invoiceType: "Updated Invoice Generated",
       updateCount: 0,
+      overdueHours: booking?.overdueHours || 0,
+      overdueCharge: booking?.overdueCharge || 0,
     });
 
-    const invoiceUrl = `${req.protocol}://${req.get(
-      "host"
-    )}/api/bookcar/invoices/${invoicePath.invoiceName}`;
+    const invoiceUrl = `http://localhost:3000/invoices/${invoicePath.invoiceName}`;
 
     booking.invoiceUrls.push(invoiceUrl);
     booking.currentInvoiceUrl = invoiceUrl;

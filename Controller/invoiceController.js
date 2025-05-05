@@ -20,7 +20,7 @@ export const generateInvoice = async (bookingDetails) => {
   const invoicePath = path.join(invoicesDir, invoiceName);
 
   const pdfDoc = await PDFLibDocument.create();
-  const page = pdfDoc.addPage([600, 500]);
+  const page = pdfDoc.addPage([600, 600]); // Increased height for more space
   const { height } = page.getSize();
   let y = height - 40;
 
@@ -50,55 +50,66 @@ export const generateInvoice = async (bookingDetails) => {
   drawText(`Date: ${moment().format("MMM Do YYYY")}`, 400, height - 60, 12);
 
   // Parties
-  y -= 70;
+  y -= 60;
   drawText("Billed To:", 50, y, 14);
   drawText(
-    `${user?.ownerName || ""}\n${user?.email || ""}\n${user?.address || ""}\n${
-      user?.contactNumber || ""
+    `${user?.ownerName || "N/A"}\n${user?.email || "N/A"}\n${user?.address || "N/A"}\n${
+      user?.contactNumber || "N/A"
     }`,
     50,
-    y - 20
+    y - 20,
+    12
   );
   drawText("From:", 350, y, 14);
   drawText(
-    `${showroom?.showroomName || ""}\n${showroom?.email || ""}\n${
-      showroom?.address || ""
-    }\n${showroom?.contactNumber || ""}`,
+    `${showroom?.showroomName || "N/A"}\n${showroom?.email || "N/A"}\n${
+      showroom?.address || "N/A"
+    }\n${showroom?.contactNumber || "N/A"}`,
     350,
-    y - 20
+    y - 20,
+    12
   );
 
-  y -= 110;
+  y -= 100; // Space before table
 
   // Table Headers
   page.drawLine({ start: { x: 50, y }, end: { x: 550, y }, thickness: 1 });
   y -= 20;
-  drawText("Description", 50, y);
-  drawText("Start Date", 180, y);
-  drawText("End Date", 300, y);
-  drawText("Daily Rent", 410, y);
-  drawText("Amount", 480, y);
+  drawText("Description", 50, y, 12);
+  drawText("Start Date", 180, y, 12);
+  drawText("End Date", 300, y, 12);
+  drawText("Daily Rent", 410, y, 12);
+  drawText("Amount", 480, y, 12);
   y -= 10;
   page.drawLine({ start: { x: 50, y }, end: { x: 550, y }, thickness: 1 });
 
-  y -= 20;
+  y -= 20; // Space for first row
 
   let maintenanceTotal = 0;
   let rentalTotal = bookingDetails.totalPrice || 0;
+  let overdueTotal = bookingDetails.overdueCharge || 0;
 
+  // Car Rental Details
   if (car) {
-    drawText(`${car.carBrand} ${car.carModel} (${car.color})`, 50, y);
+    drawText(`${car.carBrand} ${car.carModel} (${car.color})`, 50, y, 12);
     drawText(
       moment(bookingDetails.rentalStartDate).format("YYYY-MM-DD"),
       180,
-      y
+      y,
+      12
     );
-    drawText(moment(bookingDetails.rentalEndDate).format("YYYY-MM-DD"), 300, y);
-    drawText(`${car.rentRate.toFixed(0)} Rs`, 410, y);
-    drawText(`${rentalTotal.toFixed(0)} Rs`, 480, y);
-    y -= 20;
+    drawText(
+      moment(bookingDetails.rentalEndDate).format("YYYY-MM-DD"),
+      300,
+      y,
+      12
+    );
+    drawText(`${car.rentRate.toFixed(0)} Rs`, 410, y, 12);
+    drawText(`${rentalTotal.toFixed(0)} Rs`, 480, y, 12);
+    y -= 30; // Space for next row
   }
 
+  // Maintenance Costs
   if (
     bookingDetails.maintenanceCost &&
     typeof bookingDetails.maintenanceCost === "object"
@@ -107,25 +118,35 @@ export const generateInvoice = async (bookingDetails) => {
     for (const [item, cost] of maintenanceEntries) {
       const costNumber = parseFloat(cost);
       if (!isNaN(costNumber)) {
-        drawText(`Maintenance - ${item}`, 50, y);
-        drawText("-", 180, y);
-        drawText("-", 300, y);
-        drawText("-", 410, y);
-        drawText(" ", 500, y);
-        drawText(" ", 600, y);
-        drawText(`${costNumber.toFixed(0)} Rs`, 480, y);
+        drawText(`Maintenance - ${item}`, 50, y, 12);
+        drawText("-", 180, y, 12);
+        drawText("-", 300, y, 12);
+        drawText("-", 410, y, 12);
+        drawText(`${costNumber.toFixed(0)} Rs`, 480, y, 12);
         maintenanceTotal += costNumber;
-        y -= 20;
+        y -= 30; // Space for next row
       }
     }
   }
 
-  const totalAmount = rentalTotal + maintenanceTotal;
+  // Overdue Charges
+  const overdueHours = parseFloat(bookingDetails.overdueHours) || 0;
+  const overdueCharge = parseFloat(bookingDetails.overdueCharge) || 0;
+  if (overdueHours > 0 && overdueCharge > 0) {
+    drawText(`Overdue Charges (${overdueHours} hours)`, 50, y, 12);
+    drawText("-", 180, y, 12);
+    drawText("-", 300, y, 12);
+    drawText("-", 410, y, 12);
+    drawText(`${overdueCharge.toFixed(0)} Rs`, 480, y, 12);
+    y -= 30; // Space for next row
+  }
 
+  // Total
+  const totalAmount = rentalTotal + maintenanceTotal + overdueTotal;
   page.drawLine({ start: { x: 50, y }, end: { x: 550, y }, thickness: 1 });
   y -= 20;
-  drawText("Total", 410, y);
-  drawText(`${totalAmount.toFixed(0)} Rs`, 480, y);
+  drawText("Total", 410, y, 12);
+  drawText(`${totalAmount.toFixed(0)} Rs`, 480, y, 12);
 
   // Footer
   y -= 40;

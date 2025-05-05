@@ -442,7 +442,10 @@ export const getInvoicesForShowroom = async (req, res) => {
           bookingId,
           isCompleted: booking?.status === "returned",
           user: booking?.user,
-          invoiceUrl: `http://localhost:${process.env.PORT}/invoices/${matchingFile}`,
+          invoiceUrl:
+            booking?.currentInvoiceUrl ||
+            booking?.invoiceUrls[booking?.invoiceUrls.length - 1] ||
+            `http://localhost:${process.env.PORT}/invoices/${matchingFile}`,
           balance: booking?.totalPrice,
           carName: booking?.carId?.carBrand || "Unknown Car",
           createdAt: booking?.createdAt,
@@ -525,7 +528,10 @@ export const Getinvoice = async (req, res) => {
           bookingId,
           isCompleted: booking?.status === "returned",
           user: booking?.user,
-          invoiceUrl: `http://localhost:${process.env.PORT}/invoices/${matchingFile}`,
+          invoiceUrl:
+            booking?.currentInvoiceUrl ||
+            booking?.invoiceUrls[booking?.invoiceUrls.length - 1] ||
+            `http://localhost:${process.env.PORT}/invoices/${matchingFile}`,
           balance: booking?.totalPrice,
           carName: booking?.carId?.carBrand || "Unknown Car",
           createdAt: booking?.createdAt,

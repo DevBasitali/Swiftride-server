@@ -39,7 +39,13 @@ const bookingSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "return initiated", "approved", "returned", "pending payment"],
+      enum: [
+        "pending",
+        "return initiated",
+        "approved",
+        "returned",
+        "pending payment",
+      ],
       default: "pending",
     },
     repairDescriptions: {
@@ -51,8 +57,16 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    overdueHours: {
+      type: Number,
+      default: 0,
+    },
+    overdueCharge: {
+      type: Number,
+      default: 0,
+    },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 const Booking = mongoose.model("Booking", bookingSchema);
