@@ -68,18 +68,20 @@ export const bookCar = async (req, res) => {
     const rentalEndDateis = new Date(rentalEndDate);
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-    const CurrentDate = new Date();
-    const userDate = new Date(`${rentalStartDate}`);
-    const datePart = CurrentDate.toISOString().split("T")[0];
-     const userTime = new Date(`${datePart} ${rentalStartTime}`);
-     console.log("Current Date",CurrentDate.getTime())
-     console.log("User Time",userTime.getTime());
-console.log("Is valid:", !isNaN(userTime.getTime()));
-    if (  userTime>CurrentDate ) {
-      return res
-        .status(400)
-        .json({ message: "Rental Start time must be in future" });
-    }
+    const CurrentDate = new Date(); // current local date and time
+const [hours, minutes] = rentalStartTime.split(":").map(Number);
+// Clone current date and set user's entered time
+const userTime = new Date(CurrentDate);
+userTime.setHours(hours, minutes, 0, 0);
+// Debug
+console.log("Current Date", CurrentDate);
+console.log("User Time", userTime);
+
+if (userTime < CurrentDate) {
+  return res
+    .status(400)
+    .json({ message: "Rental Start time must be in future" });
+}
     if (rentalStartDateis < now) {
       return res.status(400).json({
         message: "Rental start date must be in the present or future.",
@@ -337,6 +339,7 @@ export const updateBooking = async (req, res) => {
       _id: booking._id,
       carId: booking.carId,
       userId: booking.userId,
+      showroomId:booking.showroomId,
       rentalStartDate: booking.rentalStartDate,
       rentalEndDate: booking.rentalEndDate,
       rentalStartTime: booking.rentalStartTime,
@@ -439,6 +442,7 @@ export const extendBooking = async (req, res) => {
       _id: booking._id,
       carId: booking.carId,
       userId: booking.userId,
+      showroomId:booking.showroomId,
       rentalStartDate: booking.rentalStartDate,
       rentalEndDate: booking.rentalEndDate,
       rentalStartTime: booking.rentalStartTime,
