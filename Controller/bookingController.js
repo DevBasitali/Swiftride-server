@@ -72,7 +72,10 @@ export const bookCar = async (req, res) => {
     const userDate = new Date(`${rentalStartDate}`);
     const datePart = CurrentDate.toISOString().split("T")[0];
      const userTime = new Date(`${datePart} ${rentalStartTime}`);
-    if (userTime > CurrentDate) {
+     console.log("Current Date",CurrentDate.getTime())
+     console.log("User Time",userTime.getTime());
+console.log("Is valid:", !isNaN(userTime.getTime()));
+    if ( CurrentDate>userTime) {
       return res
         .status(400)
         .json({ message: "Rental Start time must be in future" });
