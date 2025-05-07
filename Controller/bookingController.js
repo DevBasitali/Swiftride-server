@@ -71,7 +71,7 @@ export const bookCar = async (req, res) => {
     const CurrentDate = new Date();
     const userDate = new Date(`${rentalStartDate}`);
     const datePart = CurrentDate.toISOString().split("T")[0];
-     const userTime = new Date(`${datePart} ${rentalStartTime}`);
+    const userTime = new Date(`${datePart} ${rentalStartTime}`);
     if (userTime > CurrentDate) {
       return res
         .status(400)
@@ -148,8 +148,7 @@ export const bookCar = async (req, res) => {
     await car.save();
 
     const invoiceUrl = `http://localhost:3000/invoices/${invoicePath.invoiceName}`;
-    
-    
+
     res.status(201).json({
       message: "Car booked successfully",
       booking: newBooking,

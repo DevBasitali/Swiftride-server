@@ -155,8 +155,8 @@ export const approveShowroom = async (req, res) => {
       await status.save();
       return res.json({ message: "Showroom approved!" });
     } else {
-      status.approved = 0;
-      await status.save();
+      await signup.deleteOne({ _id: status.showroomId._id });
+      await Status_Model.deleteOne({ showroomId: id });
       return res.json({ message: "Showroom approval rejected!" });
     }
   } catch (error) {
