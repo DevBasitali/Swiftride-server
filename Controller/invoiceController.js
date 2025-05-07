@@ -12,7 +12,9 @@ const invoicesDir = path.join(__dirname, "../invoices");
 
 export const generateInvoice = async (bookingDetails) => {
   const user = await User.findById(bookingDetails.userId);
+  console.log("user",user);
   const showroom = await User.findById(bookingDetails.showroomId);
+  console.log("showroom",showroom);
   const car = bookingDetails.carId
     ? await Car.findById(bookingDetails.carId)
     : null;
