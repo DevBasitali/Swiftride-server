@@ -69,19 +69,17 @@ export const bookCar = async (req, res) => {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
     const CurrentDate = new Date(); // current local date and time
-const [hours, minutes] = rentalStartTime.split(":").map(Number);
-// Clone current date and set user's entered time
-const userTime = new Date(CurrentDate);
-userTime.setHours(hours, minutes, 0, 0);
-// Debug
-console.log("Current Date", CurrentDate);
-console.log("User Time", userTime);
+    const [hours, minutes] = rentalStartTime.split(":").map(Number);
+    
+    const userTime = new Date(CurrentDate);
+    userTime.setHours(hours, minutes, 0, 0);
+    
 
-if (userTime < CurrentDate) {
-  return res
-    .status(400)
-    .json({ message: "Rental Start time must be in future" });
-}
+    if (userTime < CurrentDate) {
+      return res
+        .status(400)
+        .json({ message: "Rental Start time must be in future" });
+    }
     if (rentalStartDateis < now) {
       return res.status(400).json({
         message: "Rental start date must be in the present or future.",
@@ -338,7 +336,7 @@ export const updateBooking = async (req, res) => {
       _id: booking._id,
       carId: booking.carId,
       userId: booking.userId,
-      showroomId:booking.showroomId,
+      showroomId: booking.showroomId,
       rentalStartDate: booking.rentalStartDate,
       rentalEndDate: booking.rentalEndDate,
       rentalStartTime: booking.rentalStartTime,
@@ -441,7 +439,7 @@ export const extendBooking = async (req, res) => {
       _id: booking._id,
       carId: booking.carId,
       userId: booking.userId,
-      showroomId:booking.showroomId,
+      showroomId: booking.showroomId,
       rentalStartDate: booking.rentalStartDate,
       rentalEndDate: booking.rentalEndDate,
       rentalStartTime: booking.rentalStartTime,
@@ -592,12 +590,10 @@ export const returnCar = async (req, res) => {
     let overdueHours = 0;
     let overdueCharge = 0;
 
-    if (diffInHours > 2) {
-      // After 2-hour grace period, calculate overdue hours
-      overdueHours = Math.ceil(diffInHours - 2); // Round up to the next hour
-      overdueCharge = overdueHours * 500; // 500 per overdue hour
+    if (diffInHours > 1) {
+      overdueHours = Math.ceil(diffInHours - 1);
+      overdueCharge = overdueHours * 500;
     } else if (diffInHours < 0) {
-      // Handle case where return is before rental end
       return res
         .status(400)
         .json({ message: "Car cannot be returned before rental end time" });
