@@ -306,7 +306,7 @@ export const resetPassword = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(400).json({message:"Invalid or expired token"});
+      return res.status(400).json({ message: "Invalid or expired token" });
     }
 
     // Update user's password and reset token fields
@@ -447,7 +447,9 @@ export const getInvoicesForShowroom = async (req, res) => {
             booking?.invoiceUrls[booking?.invoiceUrls.length - 1] ||
             `http://localhost:${process.env.PORT}/invoices/${matchingFile}`,
           balance: booking?.totalPrice,
-          carName: booking?.carId?.carBrand || "Unknown Car",
+          carName:
+            booking?.carId?.carBrand + " " + booking?.carId?.carModel ||
+            "Unknown Car",
           createdAt: booking?.createdAt,
         });
       }
@@ -533,7 +535,9 @@ export const Getinvoice = async (req, res) => {
             booking?.invoiceUrls[booking?.invoiceUrls.length - 1] ||
             `http://localhost:${process.env.PORT}/invoices/${matchingFile}`,
           balance: booking?.totalPrice,
-          carName: booking?.carId?.carBrand || "Unknown Car",
+          carName:
+            booking?.carId?.carBrand + " " + booking?.carId?.carModel ||
+            "Unknown Car",
           createdAt: booking?.createdAt,
         });
       }
