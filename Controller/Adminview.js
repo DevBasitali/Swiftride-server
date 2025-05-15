@@ -31,11 +31,7 @@ export const Adminview = async (req, res) => {
         role: 1,
         images: 1,
         status: {
-          $cond: {
-            if: { $eq: ["$role", "showroom"] },
-            then: { $ifNull: ["$status.status", "active"] },
-            else: "$$REMOVE",
-          },
+          $ifNull: ["$status.status", "active"],
         },
         isApproved: {
           $cond: {
