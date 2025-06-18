@@ -21,6 +21,6 @@ const Signup = new mongoose.Schema(
   { timestamps: true },
 );
 
-const signup = mongoose.model("Users_data", Signup);
+const signup = mongoose.model("Users", Signup);
 signup.createIndexes();
 export default signup;
