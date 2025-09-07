@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const Status = new mongoose.Schema({
   showroomId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Users_data",
+    ref: "Users",
     required: true,
   },
   status: {
