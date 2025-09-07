@@ -1,3 +1,4 @@
 node_modules
 invoices
 public/uploads
+.env
